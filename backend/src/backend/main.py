@@ -91,8 +91,7 @@ def request(uid: UUID, data: Context) -> LLMReturn:
     content = filesCRUD.get(user.file_id).read()
     cv_id = agent.upload_file(content, "cv.pdf")
     ret = agent.request(Prompts.NAME, [cv_id])
-    print(ret.output)
-    name = loads(ret.output[0].content[0].text)  # type: ignore TODO - add check
+    name = loads(ret.output[0].content[0].text)  # type: ignore # TODO - add check
     return LLMReturn(first=name[0], last=name[1])
 
 
