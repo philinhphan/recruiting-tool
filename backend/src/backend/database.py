@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -33,13 +33,24 @@ class UserCRUD:
         self._db = db
 
     def get(self, uid: UUID) -> User:
-        user_doc: Optional[Dict] = self._db.collection_users.find_one({"uuid": uid})
+        user_doc: Optional[Dict] = self._db.collection_users.find_one({"_id": uid})
         if not user_doc:
             raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User ID not found")
 
         user = User(**replace_out(user_doc))
 
         return user
+
+    def get_all(self) -> List[User]:
+        user_doc: List[Dict] = self._db.collection_users.find({}).to_list()
+        if not user_doc:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Empty")
+
+        users: List[User] = []
+        for user in user_doc:
+            users.append(User(**replace_out(user)))
+
+        return users
 
     def create(self, user: UserBase) -> User:
         user = User(**user.model_dump())
@@ -48,6 +59,7 @@ class UserCRUD:
         return user
 
     def update_personality(self, uid: UUID, personality: Personality) -> User:
+        _ = self._db.collection_users.update_one({"_id": uid}, {"$set": {"personality": personality.model_dump()}})
         user = self.get(uid=uid)
 
         return user

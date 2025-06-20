@@ -3,6 +3,7 @@
 from enum import Enum
 from logging import getLogger, basicConfig
 from uuid import UUID
+from typing import List
 
 from fastapi import FastAPI
 from http import HTTPStatus
@@ -10,7 +11,7 @@ from http import HTTPStatus
 import uvicorn
 
 from backend.conf import DBConfig, init_conf
-from backend.models import User, UserBase
+from backend.models import Personality, User, UserBase
 from backend.database import DatabaseConnector, UserCRUD
 
 basicConfig()
@@ -39,14 +40,24 @@ database = DatabaseConnector(dbconf)
 userCRUD = UserCRUD(database)
 
 
-@app.get("/user/{uid}", tags=[OpenAPITags.USER], response_model=User, status_code=HTTPStatus.OK)
+@app.post("/user", tags=[OpenAPITags.USER], response_model=User, status_code=HTTPStatus.OK)
+def create_user(user: UserBase) -> User:
+    return userCRUD.create(user)
+
+
+@app.get("/user/{uid}", tags=[OpenAPITags.USER, OpenAPITags.DASHBOARD], response_model=User, status_code=HTTPStatus.OK)
 def get_user_by_id(uid: UUID) -> User:
     return userCRUD.get(uid)
 
 
-@app.post("/user", tags=[OpenAPITags.USER], response_model=User, status_code=HTTPStatus.OK)
-def create_user(user: UserBase) -> User:
-    return userCRUD.create(user)
+@app.patch("/user/{uid}", tags=[OpenAPITags.USER], response_model=User, status_code=HTTPStatus.OK)
+def update_user(uid: UUID, data: Personality) -> User:
+    return userCRUD.update_personality(uid, data)
+
+
+@app.get("/user", tags=[OpenAPITags.DASHBOARD], response_model=List[User], status_code=HTTPStatus.OK)
+def get_all_user() -> List[User]:
+    return userCRUD.get_all()
 
 
 def start():
