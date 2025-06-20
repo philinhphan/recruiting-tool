@@ -1,0 +1,37 @@
+services:
+  nginx:
+    image: nginx:alpine
+    environment:
+      - FRONTEND=host.docker.internal:80
+      - BACKEND=host.docker.internal:8080
+      - NGINX_SERVER_NAME=localhost
+    ports:
+      - 80:80
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/templates/default.conf.template
+    networks:
+      - intranet
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mongo:
+    image: "mongo:latest"
+    ports:
+      - 27017:27017
+    volumes:
+      - "./mongoDB:/data/db"
+    restart: always
+
+  mongo-express:
+    image: "mongo-express:latest"
+    ports:
+      - 8001:8081
+    environment:
+      ME_CONFIG_OPTIONS_EDITORTHEME: duotone-dark
+    restart: always
+
+networks:
+  intranet:
+
+volumes:
+  mongoDB:

@@ -1,0 +1,25 @@
+{
+    // Python settings
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.typeCheckingMode": "standard",
+    "black-formatter.args": [
+        "--line-length",
+        "130"
+    ],
+    "pylint.args": [
+        "--max-line-length=130",
+        "--disable=missing-module-docstring",
+        "--disable=missing-class-docstring",
+        "--disable=missing-function-docstring",
+        "--generate-members"
+    ],
+    "isort.args": [
+        "--profile",
+        "black"
+    ],
+    "python.languageServer": "Pylance",
+    //keep terminals
+    "restoreTerminals.runOnStartup": true,
+    "restoreTerminals.keepExistingTerminalsOpen": true,
+    "python-envs.pythonProjects": [],
+}
