@@ -10,5 +10,14 @@ class DBConfig(BaseSettings):
     PORT: int = 27017
 
 
+class AppConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="APP")
+
+    OPENAI: str = (
+        ""
+    )
+    MODEL: str = "gpt-4.1"
+
+
 def init_conf() -> None:
     load_dotenv()

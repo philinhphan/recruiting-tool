@@ -11,9 +11,10 @@ from http import HTTPStatus
 
 import uvicorn
 
-from backend.conf import DBConfig, init_conf
-from backend.models import Personality, User, UserBase
+from backend.conf import DBConfig, AppConfig, init_conf
+from backend.models import Context, Personality, User, UserBase, LLMReturn
 from backend.database import DatabaseConnector, FilesCRUD, UserCRUD
+from backend.agent import Agent
 
 basicConfig()
 logger = getLogger(__name__)
@@ -29,6 +30,7 @@ ROOT_PATH = "/api/v1"
 # configuration
 init_conf()
 dbconf = DBConfig()
+appconf = AppConfig()
 
 # main runner elements
 app = FastAPI(
@@ -40,6 +42,9 @@ app = FastAPI(
 database = DatabaseConnector(dbconf)
 userCRUD = UserCRUD(database)
 filesCRUD = FilesCRUD(database)
+
+# agent
+agent = Agent(appconf)
 
 
 @app.post("/user", tags=[OpenAPITags.USER], response_model=User, status_code=HTTPStatus.OK)
@@ -77,6 +82,16 @@ def download(uid: UUID) -> StreamingResponse:
     )
 
 
+@app.post("/user/{uid}/chat", tags=[OpenAPITags.USER], response_model=LLMReturn, status_code=HTTPStatus.OK)
+def request(uid: UUID, data: Context) -> LLMReturn:
+    # user = userCRUD.get(uid)
+    # if not user.file_id:
+    #     raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No cv found")
+    # content = str(filesCRUD.get(user.file_id).read())
+    print(agent.request("Who I am?"))
+    return LLMReturn()
+
+
 @app.get("/user", tags=[OpenAPITags.DASHBOARD], response_model=List[User], status_code=HTTPStatus.OK)
 def get_all_user() -> List[User]:
     return userCRUD.get_all()
@@ -84,5 +99,4 @@ def get_all_user() -> List[User]:
 
 def start():
     """Launched with `poetry run start` at root level"""
-    logger.info("Lauched")
     uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
