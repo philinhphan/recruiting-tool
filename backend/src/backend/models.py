@@ -1,5 +1,4 @@
-from ast import Dict
-from typing import Any, Optional
+from typing import Optional
 from pydantic import BaseModel, Field
 from uuid import UUID, uuid4
 from enum import Enum
@@ -34,6 +33,7 @@ class UserBase(BaseModel):
     name_first: str
     name_second: str
 
+    file_id: Optional[UUID] = None
     expertise: ExpertiseLevel
     personality: Personality = Personality()
 

@@ -5,7 +5,7 @@ from logging import getLogger, basicConfig
 from uuid import UUID
 from typing import List
 
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from http import HTTPStatus
 
@@ -58,16 +58,23 @@ def update_user(uid: UUID, data: Personality) -> User:
 
 
 @app.post("/user/{uid}/file", tags=[OpenAPITags.USER], response_model=UUID, status_code=HTTPStatus.OK)
-def upload(file: UploadFile) -> UUID:
+def upload(uid: UUID, file: UploadFile) -> UUID:
+    _ = userCRUD.get(uid)
     filename = file.filename if file.filename else "cv.pdf"
     fid = filesCRUD.create(filename, file.file.read())
-    return fid
+    userCRUD.update_file_id(uid, fid)
+    return uid
 
 
 @app.get("/user/{uid}/file", tags=[OpenAPITags.USER, OpenAPITags.DASHBOARD], status_code=HTTPStatus.OK)
 def download(uid: UUID) -> StreamingResponse:
-    content = filesCRUD.get(uid)
-    return StreamingResponse(content, media_type="application/pdf", headers={"Content-Disposition": f"filename=cv.pdf"})
+    user = userCRUD.get(uid)
+    if not user.file_id:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No cv found")
+    content = filesCRUD.get(user.file_id)
+    return StreamingResponse(
+        content, media_type="application/pdf", headers={"Content-Disposition": f"filename={content.filename}"}
+    )
 
 
 @app.get("/user", tags=[OpenAPITags.DASHBOARD], response_model=List[User], status_code=HTTPStatus.OK)

@@ -73,6 +73,12 @@ class UserCRUD(CRUD):
 
         return user
 
+    def update_file_id(self, uid: UUID, fid: UUID) -> User:
+        _ = self._db.collection_users.update_one({"_id": uid}, {"$set": {"file_id": fid}})
+        user = self.get(uid=uid)
+
+        return user
+
 
 class FilesCRUD(CRUD):
 
