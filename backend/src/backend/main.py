@@ -5,14 +5,14 @@ from logging import getLogger, basicConfig
 from uuid import UUID
 from typing import List
 
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from http import HTTPStatus
 
 import uvicorn
 
 from backend.conf import DBConfig, init_conf
 from backend.models import Personality, User, UserBase
-from backend.database import DatabaseConnector, UserCRUD
+from backend.database import DatabaseConnector, FilesCRUD, UserCRUD
 
 basicConfig()
 logger = getLogger(__name__)
@@ -38,6 +38,7 @@ app = FastAPI(
 # database connection
 database = DatabaseConnector(dbconf)
 userCRUD = UserCRUD(database)
+filesCRUD = FilesCRUD(database)
 
 
 @app.post("/user", tags=[OpenAPITags.USER], response_model=User, status_code=HTTPStatus.OK)
@@ -53,6 +54,19 @@ def get_user_by_id(uid: UUID) -> User:
 @app.patch("/user/{uid}", tags=[OpenAPITags.USER], response_model=User, status_code=HTTPStatus.OK)
 def update_user(uid: UUID, data: Personality) -> User:
     return userCRUD.update_personality(uid, data)
+
+
+@app.post("/user/{uid}/file", tags=[OpenAPITags.USER], response_model=UUID, status_code=HTTPStatus.OK)
+def upload(file: UploadFile) -> UUID:
+    filename = file.filename if file.filename else "cv.pdf"
+    fid = filesCRUD.create(filename, file.file.read())
+    return fid
+
+
+@app.get("/user/{uid}/file", tags=[OpenAPITags.USER, OpenAPITags.DASHBOARD], response_model=File, status_code=HTTPStatus.OK)
+def download() -> File:
+    fid = filesCRUD.get()
+    return 
 
 
 @app.get("/user", tags=[OpenAPITags.DASHBOARD], response_model=List[User], status_code=HTTPStatus.OK)

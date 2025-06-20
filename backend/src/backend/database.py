@@ -1,11 +1,12 @@
 from http import HTTPStatus
-from typing import Dict, Optional, List
-from uuid import UUID
+from typing import Dict, Optional, List, Union
+from uuid import UUID, uuid4
 
 from fastapi import HTTPException
 from pymongo import MongoClient
 from pymongo.database import Database
 from pymongo.collection import Collection
+from gridfs import GridFSBucket
 
 from backend.models import Personality, User, UserBase
 from backend.models import replace_in, replace_out
@@ -18,6 +19,7 @@ class DatabaseConnector:
         self._conf = conf
 
         self._client: MongoClient = MongoClient(host=conf.HOST, port=conf.PORT, uuidRepresentation="standard")
+        self._bucket = GridFSBucket(self.db)
 
     @property
     def db(self) -> Database:
@@ -27,10 +29,17 @@ class DatabaseConnector:
     def collection_users(self) -> Collection:
         return self.db.users
 
+    @property
+    def bucket(self) -> GridFSBucket:
+        return self._bucket
 
-class UserCRUD:
+
+class CRUD:
     def __init__(self, db: DatabaseConnector) -> None:
         self._db = db
+
+
+class UserCRUD(CRUD):
 
     def get(self, uid: UUID) -> User:
         user_doc: Optional[Dict] = self._db.collection_users.find_one({"_id": uid})
@@ -63,3 +72,14 @@ class UserCRUD:
         user = self.get(uid=uid)
 
         return user
+
+
+class FilesCRUD(CRUD):
+
+    def create(self, filename: str, content: Union[str, bytes]) -> UUID:
+        fid: UUID = uuid4()
+        self._db.bucket.upload_from_stream_with_id(file_id=fid, filename=filename, source=content)
+
+        return fid
+
+    def get(self, file_id: UUID): 
