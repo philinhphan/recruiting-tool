@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from pymongo import MongoClient
 from pymongo.database import Database
 from pymongo.collection import Collection
-from gridfs import GridFSBucket
+from gridfs import GridFSBucket, GridOut, NoFile
 
 from backend.models import Personality, User, UserBase
 from backend.models import replace_in, replace_out
@@ -82,4 +82,9 @@ class FilesCRUD(CRUD):
 
         return fid
 
-    def get(self, file_id: UUID): 
+    def get(self, file_id: UUID) -> GridOut:
+        try:
+            out = self._db.bucket.open_download_stream(file_id=file_id)
+        except NoFile:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Not found")
+        return out

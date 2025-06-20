@@ -5,7 +5,8 @@ from logging import getLogger, basicConfig
 from uuid import UUID
 from typing import List
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, UploadFile
+from fastapi.responses import StreamingResponse
 from http import HTTPStatus
 
 import uvicorn
@@ -63,10 +64,10 @@ def upload(file: UploadFile) -> UUID:
     return fid
 
 
-@app.get("/user/{uid}/file", tags=[OpenAPITags.USER, OpenAPITags.DASHBOARD], response_model=File, status_code=HTTPStatus.OK)
-def download() -> File:
-    fid = filesCRUD.get()
-    return 
+@app.get("/user/{uid}/file", tags=[OpenAPITags.USER, OpenAPITags.DASHBOARD], status_code=HTTPStatus.OK)
+def download(uid: UUID) -> StreamingResponse:
+    content = filesCRUD.get(uid)
+    return StreamingResponse(content, media_type="application/pdf", headers={"Content-Disposition": f"filename=cv.pdf"})
 
 
 @app.get("/user", tags=[OpenAPITags.DASHBOARD], response_model=List[User], status_code=HTTPStatus.OK)
