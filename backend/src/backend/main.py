@@ -3,6 +3,7 @@
 from enum import Enum
 from logging import getLogger, basicConfig
 from uuid import UUID
+from json import loads
 from typing import List
 
 from fastapi import FastAPI, HTTPException, UploadFile
@@ -14,7 +15,7 @@ import uvicorn
 from backend.conf import DBConfig, AppConfig, init_conf
 from backend.models import Context, Personality, User, UserBase, LLMReturn
 from backend.database import DatabaseConnector, FilesCRUD, UserCRUD
-from backend.agent import Agent
+from backend.agent import Agent, Prompts
 
 basicConfig()
 logger = getLogger(__name__)
@@ -84,12 +85,15 @@ def download(uid: UUID) -> StreamingResponse:
 
 @app.post("/user/{uid}/chat", tags=[OpenAPITags.USER], response_model=LLMReturn, status_code=HTTPStatus.OK)
 def request(uid: UUID, data: Context) -> LLMReturn:
-    # user = userCRUD.get(uid)
-    # if not user.file_id:
-    #     raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No cv found")
-    # content = str(filesCRUD.get(user.file_id).read())
-    print(agent.request("Who I am?"))
-    return LLMReturn()
+    user = userCRUD.get(uid)
+    if not user.file_id:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No cv found")
+    content = filesCRUD.get(user.file_id).read()
+    cv_id = agent.upload_file(content, "cv.pdf")
+    ret = agent.request(Prompts.NAME, [cv_id])
+    print(ret.output)
+    name = loads(ret.output[0].content[0].text)  # type: ignore TODO - add check
+    return LLMReturn(first=name[0], last=name[1])
 
 
 @app.get("/user", tags=[OpenAPITags.DASHBOARD], response_model=List[User], status_code=HTTPStatus.OK)

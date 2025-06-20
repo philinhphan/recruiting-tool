@@ -44,7 +44,9 @@ class User(UserBase, HasUUID): ...
 class Context(BaseModel): ...
 
 
-class LLMReturn(BaseModel): ...
+class LLMReturn(BaseModel): 
+    first: str
+    last: str
 
 
 # ================== HELPERS
