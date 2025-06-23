@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
 from uuid import UUID, uuid4
 from enum import Enum
@@ -9,9 +9,11 @@ ID_INTERNAL: str = "_id"
 
 
 # ================== ENUMS
-class ExpertiseLevel(str, Enum):
-    UNDERGRADUATE = "UNDERGRADUATE"
-    PDH = "PDH"
+class UserLevel(str, Enum):
+    INITIAL = "initial"
+    PERSONALITY = "personality"
+    QUESTIONS = "questions"
+    DONE = "done"
 
 
 # ================== COMMONS
@@ -25,8 +27,16 @@ class HasUUID(BaseModel):
 
 
 class Personality(BaseModel):
-    is_set: bool = False
-    axis: float = 0
+    openness: float = 0
+    neuroticism: float = 0
+    agreeableness: float = 0
+    extraversion: float = 0
+    conscientiousness: float = 0
+
+
+class Question(BaseModel):
+    question: str
+    answer: str
 
 
 class UserBase(BaseModel):
@@ -34,19 +44,25 @@ class UserBase(BaseModel):
     name_second: str
 
     file_id: Optional[UUID] = None
-    expertise: ExpertiseLevel
+    level: UserLevel = UserLevel.INITIAL
     personality: Personality = Personality()
+    questions: List[Question] = []
 
 
 class User(UserBase, HasUUID): ...
 
 
-class Context(BaseModel): ...
+class UserUpdate(BaseModel):
+    file_id: Optional[UUID] = None
+    level: Optional[UserLevel] = None
+    personality: Optional[Personality] = None
 
 
-class LLMReturn(BaseModel): 
-    first: str
-    last: str
+class JobBase(BaseModel):
+    name: str
+
+
+class Job(JobBase, HasUUID): ...
 
 
 # ================== HELPERS

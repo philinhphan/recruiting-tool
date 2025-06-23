@@ -13,8 +13,8 @@ from http import HTTPStatus
 import uvicorn
 
 from backend.conf import DBConfig, AppConfig, init_conf
-from backend.models import Context, Personality, User, UserBase, LLMReturn
-from backend.database import DatabaseConnector, FilesCRUD, UserCRUD
+from backend.models import Job, JobBase, Question, User, UserBase, UserUpdate
+from backend.database import DatabaseConnector, FilesCRUD, UserCRUD, JobsCRUD
 from backend.agent import Agent, Prompts
 
 basicConfig()
@@ -43,6 +43,7 @@ app = FastAPI(
 database = DatabaseConnector(dbconf)
 userCRUD = UserCRUD(database)
 filesCRUD = FilesCRUD(database)
+jobCRUD = JobsCRUD(database)
 
 # agent
 agent = Agent(appconf)
@@ -59,21 +60,12 @@ def get_user_by_id(uid: UUID) -> User:
 
 
 @app.patch("/user/{uid}", tags=[OpenAPITags.USER], response_model=User, status_code=HTTPStatus.OK)
-def update_user(uid: UUID, data: Personality) -> User:
-    return userCRUD.update_personality(uid, data)
-
-
-@app.post("/user/{uid}/file", tags=[OpenAPITags.USER], response_model=UUID, status_code=HTTPStatus.OK)
-def upload(uid: UUID, file: UploadFile) -> UUID:
-    _ = userCRUD.get(uid)
-    filename = file.filename if file.filename else "cv.pdf"
-    fid = filesCRUD.create(filename, file.file.read())
-    userCRUD.update_file_id(uid, fid)
-    return uid
+def update_user(uid: UUID, data: UserUpdate) -> User:
+    return userCRUD.update(uid, data)
 
 
 @app.get("/user/{uid}/file", tags=[OpenAPITags.USER, OpenAPITags.DASHBOARD], status_code=HTTPStatus.OK)
-def download(uid: UUID) -> StreamingResponse:
+def download_by_user(uid: UUID) -> StreamingResponse:
     user = userCRUD.get(uid)
     if not user.file_id:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No cv found")
@@ -83,21 +75,74 @@ def download(uid: UUID) -> StreamingResponse:
     )
 
 
-@app.post("/user/{uid}/chat", tags=[OpenAPITags.USER], response_model=LLMReturn, status_code=HTTPStatus.OK)
-def request(uid: UUID, data: Context) -> LLMReturn:
+@app.get("/file/{fid}", tags=[OpenAPITags.USER, OpenAPITags.DASHBOARD], status_code=HTTPStatus.OK)
+def download_by_id(uid: UUID) -> StreamingResponse:
+    user = userCRUD.get(uid)
+    if not user.file_id:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No cv found")
+    content = filesCRUD.get(user.file_id)
+    return StreamingResponse(
+        content, media_type="application/pdf", headers={"Content-Disposition": f"filename={content.filename}"}
+    )
+
+
+@app.post("/file", tags=[OpenAPITags.USER], response_model=UUID, status_code=HTTPStatus.OK)
+def upload(file: UploadFile) -> UUID:
+    filename = file.filename if file.filename else "cv.pdf"
+    fid = filesCRUD.create(filename, file.file.read())
+    return fid
+
+
+@app.get("/file/{fid}/userdata", tags=[OpenAPITags.USER], response_model=UserBase, status_code=HTTPStatus.OK)
+def get_userinfo_by_file(fid: UUID) -> UserBase:
+    # get file content
+    content = filesCRUD.get(fid).read()
+
+    # upload file content
+    cv_id = agent.upload_file(content, "cv.pdf")
+
+    # get user data
+    ret = agent.request([Prompts.NAME], [cv_id])
+    name = loads(ret.output[0].content[0].text)  # type: ignore # TODO - add check
+    return UserBase(name_first=name[0], name_second=name[1], file_id=fid)
+
+
+@app.get("/user/{uid}/question", tags=[OpenAPITags.USER], response_model=str, status_code=HTTPStatus.OK)
+def get_question_by_user(uid: UUID) -> str:
+    # get file content
     user = userCRUD.get(uid)
     if not user.file_id:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No cv found")
     content = filesCRUD.get(user.file_id).read()
+
+    # upload file content
     cv_id = agent.upload_file(content, "cv.pdf")
-    ret = agent.request(Prompts.NAME, [cv_id])
-    name = loads(ret.output[0].content[0].text)  # type: ignore # TODO - add check
-    return LLMReturn(first=name[0], last=name[1])
+
+    # get user data
+    pnlt = user.personality
+    ret = agent.request([Prompts.NAME], [cv_id])
+    question = str(ret.output[0].content[0].text)  # type: ignore # TODO - add check
+    return question
+
+
+@app.post("/user/{uid}/question", tags=[OpenAPITags.USER], response_model=None, status_code=HTTPStatus.OK)
+def post_question_by_user(uid: UUID, question: Question) -> User:
+    return userCRUD.add_question(uid, question)
 
 
 @app.get("/user", tags=[OpenAPITags.DASHBOARD], response_model=List[User], status_code=HTTPStatus.OK)
 def get_all_user() -> List[User]:
     return userCRUD.get_all()
+
+
+@app.get("/job", tags=[OpenAPITags.USER], response_model=List[Job], status_code=HTTPStatus.OK)
+def get_all_jobs() -> List[Job]:
+    return jobCRUD.get_all()
+
+
+@app.post("/job", tags=[OpenAPITags.DASHBOARD], response_model=UUID, status_code=HTTPStatus.OK)
+def create_job(job: JobBase) -> UUID:
+    return jobCRUD.create(job)
 
 
 def start():
