@@ -8,7 +8,8 @@ from pymongo.database import Database
 from pymongo.collection import Collection
 from gridfs import GridFSBucket, GridOut, NoFile
 
-from backend.models import Personality, User, UserBase
+from backend.models import Question, User, UserBase, UserUpdate
+from backend.models import JobBase, Job
 from backend.models import replace_in, replace_out
 from backend.conf import DBConfig
 
@@ -28,6 +29,10 @@ class DatabaseConnector:
     @property
     def collection_users(self) -> Collection:
         return self.db.users
+
+    @property
+    def collection_jobs(self) -> Collection:
+        return self.db.jobs
 
     @property
     def bucket(self) -> GridFSBucket:
@@ -67,17 +72,16 @@ class UserCRUD(CRUD):
 
         return user
 
-    def update_personality(self, uid: UUID, personality: Personality) -> User:
-        _ = self._db.collection_users.update_one({"_id": uid}, {"$set": {"personality": personality.model_dump()}})
+    def update(self, uid: UUID, data: UserUpdate) -> User:
+        _ = self._db.collection_users.update_one({"_id": uid}, {"$set": {**data.model_dump(exclude_none=True)}})
         user = self.get(uid=uid)
-
         return user
 
-    def update_file_id(self, uid: UUID, fid: UUID) -> User:
-        _ = self._db.collection_users.update_one({"_id": uid}, {"$set": {"file_id": fid}})
-        user = self.get(uid=uid)
-
-        return user
+    def add_question(self, uid: UUID, question: Question) -> User:
+        current = self.get(uid=uid).questions
+        current.append(question)
+        _ = self._db.collection_users.update_one({"_id": uid}, {"$set": {"questions": [mdl.model_dump() for mdl in current]}})
+        return self.get(uid=uid)
 
 
 class FilesCRUD(CRUD):
@@ -94,3 +98,23 @@ class FilesCRUD(CRUD):
         except NoFile:
             raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Not found")
         return out
+
+
+class JobsCRUD(CRUD):
+
+    def create(self, jobBase: JobBase) -> UUID:
+        job = Job(**jobBase.model_dump())
+        self._db.collection_jobs.insert_one(replace_in(job.model_dump()))
+
+        return job.uuid
+
+    def get_all(self) -> List[Job]:
+        job_doc: List[Dict] = self._db.collection_jobs.find({}).to_list()
+        if not job_doc:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Empty")
+
+        jobs: List[Job] = []
+        for job in job_doc:
+            jobs.append(Job(**replace_out(job)))
+
+        return jobs
