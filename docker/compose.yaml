@@ -6,7 +6,7 @@ services:
       - BACKEND=host.docker.internal:8080
       - NGINX_SERVER_NAME=localhost
     ports:
-      - 80:80
+      - 8080:8080
     volumes:
       - ./proxy/nginx.conf:/etc/nginx/templates/default.conf.template
     networks:
@@ -29,6 +29,13 @@ services:
     environment:
       ME_CONFIG_OPTIONS_EDITORTHEME: duotone-dark
     restart: always
+
+  backend:
+    build: ../backend
+    ports:
+      - 8000:8000
+    profiles:
+      - app
 
 networks:
   intranet:
