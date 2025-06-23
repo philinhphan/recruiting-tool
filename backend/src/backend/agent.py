@@ -17,7 +17,7 @@ class Prompts(str, Enum):
     QUESTIONA = f"On the context of all information, return an user specific question about the technical skills of the user. Return a string."
     QUESTIONB = f"On the context of all information, return an user specific question about the teamwork skills of the user. Return a string."
     QUESTIONC = f"On the context of all information, return an user specific question about the interest and future tasks he wants to work on. Return a string."
-    OFFERINGS = "In the provided json file with all offerings, find the three best ones for the user and return them as a list of json documents with the schema {title: string, locations: list(string), description: string}."
+    OFFERINGS = "In the provided json file with all offerings, find the three best ones for the user and return a json object with the following schema: {reasoning: string, output: list(offering)}, and fill list(offering) with a list of json documents with the schema {title: string, locations: list(string), description: string}."
 
 
 class Agent:

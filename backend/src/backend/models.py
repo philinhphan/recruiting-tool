@@ -65,6 +65,11 @@ class Jobs(BaseModel):
     description: str
 
 
+class OfferingRequest(BaseModel):
+    reasoning: str
+    output: List[Jobs]
+
+
 # ================== HELPERS
 
 

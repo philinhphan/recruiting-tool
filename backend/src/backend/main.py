@@ -14,7 +14,7 @@ from http import HTTPStatus
 import uvicorn
 
 from backend.conf import DBConfig, AppConfig, init_conf
-from backend.models import Jobs, Question, User, UserBase, UserUpdate
+from backend.models import Jobs, OfferingRequest, Question, User, UserBase, UserUpdate
 from backend.database import DatabaseConnector, FilesCRUD, UserCRUD
 from backend.agent import Agent, Prompts, get_user_answers, init_job_database, understand_personality
 
@@ -143,8 +143,8 @@ def get_question_by_user(uid: UUID, qid: int) -> str:
     return question
 
 
-@app.get("/user/{uid}/offerings", tags=[OpenAPITags.USER], response_model=List[Jobs], status_code=HTTPStatus.OK)
-def get_offerings_by_user(uid: UUID) -> List[Jobs]:
+@app.get("/user/{uid}/offerings", tags=[OpenAPITags.USER], response_model=OfferingRequest, status_code=HTTPStatus.OK)
+def get_offerings_by_user(uid: UUID) -> OfferingRequest:
     # get user
     user = userCRUD.get(uid)
 
@@ -166,8 +166,9 @@ def get_offerings_by_user(uid: UUID) -> List[Jobs]:
         [cv_id],
     )
     jobs_docs = json.loads(ret.output[0].content[0].text)  # type: ignore # TODO - add check
-    jobs = [Jobs(**doc) for doc in jobs_docs]
-    return jobs
+    jobs = [Jobs(**doc) for doc in jobs_docs["output"]]
+    reasoning = jobs_docs["reasoning"]
+    return OfferingRequest(output=jobs, reasoning=reasoning)
 
 
 @app.post("/user/{uid}/question", tags=[OpenAPITags.USER], response_model=None, status_code=HTTPStatus.OK)
