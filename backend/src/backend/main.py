@@ -7,6 +7,7 @@ from json import loads
 from typing import List
 
 from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from http import HTTPStatus
 
@@ -37,6 +38,15 @@ appconf = AppConfig()
 app = FastAPI(
     root_path=ROOT_PATH,
     swagger_ui_parameters={"syntaxHighlight": {"theme": "obsidian"}},
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # database connection
