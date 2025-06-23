@@ -1,25 +1,26 @@
 from enum import Enum
-from typing import List, Optional
+from typing import List
 
-from backend.models import Personality
 from openai import OpenAI
 from openai.types.responses import ResponseInputItemParam, Response
 
+from backend.models import Personality
 from backend.conf import AppConfig
 
 
-INSTRUCTIONS: str = "You're helping with HR tasks. Make the output readable for a computer"
+INSTRUCTIONS: str = "You're helping with HR tasks. Make the output readable for a computer. Use the English Language."
 
 
 class Prompts(str, Enum):
     NAME = f"Extract the information of the file 'cv.pdf' and return only a name list '[\"first\",\"last\"]'. If you cannot find it, return an empty list."
-    QUESTIONA = f"On the context of all information, ask an user specific question about the technical skills of the user."
-    QUESTIONB = f"On the context of all information, ask an user specific question about the teamwork skills of the user."
-    QUESTIONC = f"On the context of all information, ask an user specific question about the interest and future tasks he wants to work on."
+    QUESTIONA = f"On the context of all information, return an user specific question about the technical skills of the user. Return a string."
+    QUESTIONB = f"On the context of all information, return an user specific question about the teamwork skills of the user. Return a string."
+    QUESTIONC = f"On the context of all information, return an user specific question about the interest and future tasks he wants to work on. Return a string."
 
 
 def understand_personality(personality: Personality) -> str:
-    return ""
+    print(f"Using the personality model of the BIG 5, this user has the following values: {personality.__str__}")
+    return f"Using the personality model of the BIG 5, this user has the following values: {personality.__str__}"
 
 
 class Agent:

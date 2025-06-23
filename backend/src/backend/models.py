@@ -44,6 +44,7 @@ class UserBase(BaseModel):
     name_second: str
 
     file_id: Optional[UUID] = None
+    openai_file_id: Optional[str] = None
     level: UserLevel = UserLevel.INITIAL
     personality: Personality = Personality()
     questions: List[Question] = []

@@ -15,7 +15,7 @@ import uvicorn
 from backend.conf import DBConfig, AppConfig, init_conf
 from backend.models import Job, JobBase, Question, User, UserBase, UserUpdate
 from backend.database import DatabaseConnector, FilesCRUD, UserCRUD, JobsCRUD
-from backend.agent import Agent, Prompts
+from backend.agent import Agent, Prompts, understand_personality
 
 basicConfig()
 logger = getLogger(__name__)
@@ -104,11 +104,11 @@ def get_userinfo_by_file(fid: UUID) -> UserBase:
     # get user data
     ret = agent.request([Prompts.NAME], [cv_id])
     name = loads(ret.output[0].content[0].text)  # type: ignore # TODO - add check
-    return UserBase(name_first=name[0], name_second=name[1], file_id=fid)
+    return UserBase(name_first=name[0], name_second=name[1], file_id=fid, openai_file_id=cv_id)
 
 
-@app.get("/user/{uid}/question", tags=[OpenAPITags.USER], response_model=str, status_code=HTTPStatus.OK)
-def get_question_by_user(uid: UUID) -> str:
+@app.get("/user/{uid}/question/{qid}", tags=[OpenAPITags.USER], response_model=str, status_code=HTTPStatus.OK)
+def get_question_by_user(uid: UUID, qid: int) -> str:
     # get file content
     user = userCRUD.get(uid)
     if not user.file_id:
@@ -116,12 +116,27 @@ def get_question_by_user(uid: UUID) -> str:
     content = filesCRUD.get(user.file_id).read()
 
     # upload file content
-    cv_id = agent.upload_file(content, "cv.pdf")
+    if not user.openai_file_id:
+        cv_id = agent.upload_file(content, "cv.pdf")
+    else:
+        cv_id = user.openai_file_id
+
+    # question
+    QUESTIONS = [Prompts.QUESTIONA.value, Prompts.QUESTIONB.value, Prompts.QUESTIONC.value]
+    if qid > len(QUESTIONS):
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="qid to large")
+    QST = QUESTIONS[qid]
+
+    print(QST)
 
     # get user data
-    pnlt = user.personality
-    ret = agent.request([Prompts.NAME], [cv_id])
+    psnlt = understand_personality(user.personality)
+    ret = agent.request(
+        [psnlt, QST],
+        [cv_id],
+    )
     question = str(ret.output[0].content[0].text)  # type: ignore # TODO - add check
+    question.replace('/"', "")
     return question
 
 
