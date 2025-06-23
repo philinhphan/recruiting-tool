@@ -59,11 +59,10 @@ class UserUpdate(BaseModel):
     personality: Optional[Personality] = None
 
 
-class JobBase(BaseModel):
-    name: str
-
-
-class Job(JobBase, HasUUID): ...
+class Jobs(BaseModel):
+    title: str
+    locations: List[str]
+    description: str
 
 
 # ================== HELPERS

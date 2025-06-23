@@ -5,6 +5,7 @@ from logging import getLogger, basicConfig
 from uuid import UUID
 from json import loads
 from typing import List
+import json
 
 from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
@@ -13,9 +14,9 @@ from http import HTTPStatus
 import uvicorn
 
 from backend.conf import DBConfig, AppConfig, init_conf
-from backend.models import Job, JobBase, Question, User, UserBase, UserUpdate
-from backend.database import DatabaseConnector, FilesCRUD, UserCRUD, JobsCRUD
-from backend.agent import Agent, Prompts, understand_personality
+from backend.models import Jobs, Question, User, UserBase, UserUpdate
+from backend.database import DatabaseConnector, FilesCRUD, UserCRUD
+from backend.agent import Agent, Prompts, get_user_answers, init_job_database, understand_personality
 
 basicConfig()
 logger = getLogger(__name__)
@@ -43,10 +44,12 @@ app = FastAPI(
 database = DatabaseConnector(dbconf)
 userCRUD = UserCRUD(database)
 filesCRUD = FilesCRUD(database)
-jobCRUD = JobsCRUD(database)
 
 # agent
 agent = Agent(appconf)
+# JOB_DB = init_job_database(agent, "./open-positions.json")
+with open("./open-positions.json", "r") as f:
+    job_db = f.read()
 
 
 @app.post("/user", tags=[OpenAPITags.USER], response_model=User, status_code=HTTPStatus.OK)
@@ -109,14 +112,14 @@ def get_userinfo_by_file(fid: UUID) -> UserBase:
 
 @app.get("/user/{uid}/question/{qid}", tags=[OpenAPITags.USER], response_model=str, status_code=HTTPStatus.OK)
 def get_question_by_user(uid: UUID, qid: int) -> str:
-    # get file content
+    # get user
     user = userCRUD.get(uid)
-    if not user.file_id:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No cv found")
-    content = filesCRUD.get(user.file_id).read()
 
     # upload file content
     if not user.openai_file_id:
+        if not user.file_id:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No cv found")
+        content = filesCRUD.get(user.file_id).read()
         cv_id = agent.upload_file(content, "cv.pdf")
     else:
         cv_id = user.openai_file_id
@@ -140,6 +143,33 @@ def get_question_by_user(uid: UUID, qid: int) -> str:
     return question
 
 
+@app.get("/user/{uid}/offerings", tags=[OpenAPITags.USER], response_model=List[Jobs], status_code=HTTPStatus.OK)
+def get_offerings_by_user(uid: UUID) -> List[Jobs]:
+    # get user
+    user = userCRUD.get(uid)
+
+    # upload file content
+    if not user.openai_file_id:
+        if not user.file_id:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No cv found")
+        content = filesCRUD.get(user.file_id).read()
+        cv_id = agent.upload_file(content, "cv.pdf")
+    else:
+        cv_id = user.openai_file_id
+
+    # get user data
+    psnlt = understand_personality(user.personality)
+    qst = get_user_answers(user)
+
+    ret = agent.request(
+        [psnlt, qst, f"Job db: {job_db}", Prompts.OFFERINGS],
+        [cv_id],
+    )
+    jobs_docs = json.loads(ret.output[0].content[0].text)  # type: ignore # TODO - add check
+    jobs = [Jobs(**doc) for doc in jobs_docs]
+    return jobs
+
+
 @app.post("/user/{uid}/question", tags=[OpenAPITags.USER], response_model=None, status_code=HTTPStatus.OK)
 def post_question_by_user(uid: UUID, question: Question) -> User:
     return userCRUD.add_question(uid, question)
@@ -148,16 +178,6 @@ def post_question_by_user(uid: UUID, question: Question) -> User:
 @app.get("/user", tags=[OpenAPITags.DASHBOARD], response_model=List[User], status_code=HTTPStatus.OK)
 def get_all_user() -> List[User]:
     return userCRUD.get_all()
-
-
-@app.get("/job", tags=[OpenAPITags.USER], response_model=List[Job], status_code=HTTPStatus.OK)
-def get_all_jobs() -> List[Job]:
-    return jobCRUD.get_all()
-
-
-@app.post("/job", tags=[OpenAPITags.DASHBOARD], response_model=UUID, status_code=HTTPStatus.OK)
-def create_job(job: JobBase) -> UUID:
-    return jobCRUD.create(job)
 
 
 def start():

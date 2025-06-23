@@ -9,7 +9,6 @@ from pymongo.collection import Collection
 from gridfs import GridFSBucket, GridOut, NoFile
 
 from backend.models import Question, User, UserBase, UserUpdate
-from backend.models import JobBase, Job
 from backend.models import replace_in, replace_out
 from backend.conf import DBConfig
 
@@ -98,23 +97,3 @@ class FilesCRUD(CRUD):
         except NoFile:
             raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Not found")
         return out
-
-
-class JobsCRUD(CRUD):
-
-    def create(self, jobBase: JobBase) -> UUID:
-        job = Job(**jobBase.model_dump())
-        self._db.collection_jobs.insert_one(replace_in(job.model_dump()))
-
-        return job.uuid
-
-    def get_all(self) -> List[Job]:
-        job_doc: List[Dict] = self._db.collection_jobs.find({}).to_list()
-        if not job_doc:
-            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Empty")
-
-        jobs: List[Job] = []
-        for job in job_doc:
-            jobs.append(Job(**replace_out(job)))
-
-        return jobs
