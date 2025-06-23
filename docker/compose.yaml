@@ -3,7 +3,7 @@ services:
     image: nginx:alpine
     environment:
       - FRONTEND=host.docker.internal:80
-      - BACKEND=host.docker.internal:8080
+      - BACKEND=host.docker.internal:8000
       - NGINX_SERVER_NAME=localhost
     ports:
       - 8080:8080
