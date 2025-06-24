@@ -6,18 +6,22 @@ import { Upload, Plus, FileText, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef } from "react"
 import { OpenQuestion } from "./open-question"
+import { Offerings, OpenPosition } from "./offerings"
 import { UserApi } from "./api-client"
 
 export default function Component() {
   const client = new UserApi();
 
+  const [loading, setLoading] = useState<boolean>(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [uuid, setUuid] = useState<string>("")
   const [question1, setQuestion1] = useState<string>("")
   const [question2, setQuestion2] = useState<string>("")
   const [question3, setQuestion3] = useState<string>("")
+  const [openPositions, setOpenPositions] = useState<OpenPosition[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const firstQuestionRef = useRef<HTMLDivElement>(null)
 
   const handleFileSelect = (file: File) => {
     // Validate file type
@@ -178,27 +182,48 @@ export default function Component() {
 
           {/* Continue Button */}
           <div className="text-center">
-            <Button
-              className={`px-12 py-6 text-lg font-semibold rounded-full transition-all ${selectedFile
-                ? "bg-[#00ea51] hover:bg-[#00d147] text-white"
-                : "bg-[#d6d6d6] text-[#6e6e6e] cursor-not-allowed"
-                }`}
-              disabled={!selectedFile}
-              onClick={async () => {
-                if (selectedFile) {
-                  const response = await client.uploadFilePost(selectedFile)
-                  const userInfo = await client.getUserinfoByFileFileFidUserdataGet(response.data)
-                  const user = await client.createUserUserPost(userInfo.data)
-                  setUuid(user.data.uuid === undefined ? "" : user.data.uuid);
-                  if (user.data.uuid !== undefined) {
-                    const question = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 0)
-                    setQuestion1(question.data)
+            <div className="flex justify-center">
+              <Button
+                className={`px-12 py-6 text-lg font-semibold rounded-full transition-all ${selectedFile
+                  ? "bg-[#00ea51] hover:bg-[#00d147] text-white"
+                  : "bg-[#d6d6d6] text-[#6e6e6e] cursor-not-allowed"
+                  } flex items-center justify-center`}
+                disabled={!selectedFile || loading}
+                onClick={async () => {
+                  if (selectedFile) {
+                    setLoading(true)
+                    try {
+                      const response = await client.uploadFilePost(selectedFile)
+                      const userInfo = await client.getUserinfoByFileFileFidUserdataGet(response.data)
+                      const user = await client.createUserUserPost(userInfo.data)
+                      setUuid(user.data.uuid === undefined ? "" : user.data.uuid);
+                      if (user.data.uuid !== undefined) {
+                        const question = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 0)
+                        setQuestion1(question.data)
+                        
+                        // Scroll to first question after a short delay
+                        setTimeout(() => {
+                          firstQuestionRef.current?.scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'start'
+                          });
+                        }, 100);
+                      }
+                    } finally {
+                      setLoading(false)
+                    }
                   }
-                }
-              }}
-            >
-              Continue
-            </Button>
+                }}
+              >
+                {loading ? (
+                  <svg className="animate-spin h-6 w-6 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                ) : null}
+                {loading ? "Loading..." : "Continue"}
+              </Button>
+            </div>
 
             <p className="text-[#6e6e6e] text-sm mt-6">
               By continuing, you agree to{" "}
@@ -209,20 +234,22 @@ export default function Component() {
           </div>
         </div>
 
-        <OpenQuestion
-          heading="A question just for you..."
-          question={question1}
-          onContinue={async (answer) => {
-            const data = {
-              question: question1,
-              answer: answer
-            }
+        <div ref={firstQuestionRef}>
+          <OpenQuestion
+            heading="A question just for you..."
+            question={question1}
+            onContinue={async (answer) => {
+              const data = {
+                question: question1,
+                answer: answer
+              }
 
-            await client.postQuestionByUserUserUidQuestionPost(uuid, data)
-            const question = await client.getQuestionByUserUserUidQuestionQidGet(uuid, 1)
-            setQuestion2(question.data);
-          }}
-        />
+              await client.postQuestionByUserUserUidQuestionPost(uuid, data)
+              const question = await client.getQuestionByUserUserUidQuestionQidGet(uuid, 1)
+              setQuestion2(question.data);
+            }}
+          />
+        </div>
 
         <OpenQuestion
           heading="Let us test your skills..."
@@ -249,8 +276,21 @@ export default function Component() {
             }
 
             await client.postQuestionByUserUserUidQuestionPost(uuid, data)
+            const positions = await client.getOfferingsByUserUserUidOfferingsGet(uuid)
+            const test = positions.data;
+            setOpenPositions(test.output.map((item) => ({
+              title: item.title,
+              description: item.description,
+              location: item.locations.join(", ")
+            })));
           }}
         />
+
+        <Offerings
+          heading="Top job positions for you"
+          openPositions={openPositions}
+        />
+
       </div>
 
       {/* Progress Indicator */}
