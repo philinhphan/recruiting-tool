@@ -8,11 +8,12 @@ import { useState, useRef } from "react"
 import { OpenQuestion } from "./open-question"
 import { Offerings, OpenPosition } from "./offerings"
 import { UserApi } from "./api-client"
+import { PersonalityTestSection } from "./personality-test-section"
+import { LoadingButton } from "./loading-button"
 
 export default function Component() {
   const client = new UserApi();
 
-  const [loading, setLoading] = useState<boolean>(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [uuid, setUuid] = useState<string>("")
@@ -183,46 +184,35 @@ export default function Component() {
           {/* Continue Button */}
           <div className="text-center">
             <div className="flex justify-center">
-              <Button
+              <LoadingButton
                 className={`px-12 py-6 text-lg font-semibold rounded-full transition-all ${selectedFile
                   ? "bg-[#00ea51] hover:bg-[#00d147] text-white"
                   : "bg-[#d6d6d6] text-[#6e6e6e] cursor-not-allowed"
-                  } flex items-center justify-center`}
-                disabled={!selectedFile || loading}
+                  }`}
+                disabled={!selectedFile}
                 onClick={async () => {
                   if (selectedFile) {
-                    setLoading(true)
-                    try {
-                      const response = await client.uploadFilePost(selectedFile)
-                      const userInfo = await client.getUserinfoByFileFileFidUserdataGet(response.data)
-                      const user = await client.createUserUserPost(userInfo.data)
-                      setUuid(user.data.uuid === undefined ? "" : user.data.uuid);
-                      if (user.data.uuid !== undefined) {
-                        const question = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 0)
-                        setQuestion1(question.data)
-                        
-                        // Scroll to first question after a short delay
-                        setTimeout(() => {
-                          firstQuestionRef.current?.scrollIntoView({ 
-                            behavior: 'smooth',
-                            block: 'start'
-                          });
-                        }, 100);
-                      }
-                    } finally {
-                      setLoading(false)
+                    const response = await client.uploadFilePost(selectedFile)
+                    const userInfo = await client.getUserinfoByFileFileFidUserdataGet(response.data)
+                    const user = await client.createUserUserPost(userInfo.data)
+                    setUuid(user.data.uuid === undefined ? "" : user.data.uuid);
+                    if (user.data.uuid !== undefined) {
+                      const question = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 0)
+                      setQuestion1(question.data)
+                      
+                      // Scroll to first question after a short delay
+                      setTimeout(() => {
+                        firstQuestionRef.current?.scrollIntoView({ 
+                          behavior: 'smooth',
+                          block: 'start'
+                        });
+                      }, 100);
                     }
                   }
                 }}
               >
-                {loading ? (
-                  <svg className="animate-spin h-6 w-6 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                  </svg>
-                ) : null}
-                {loading ? "Loading..." : "Continue"}
-              </Button>
+                Continue
+              </LoadingButton>
             </div>
 
             <p className="text-[#6e6e6e] text-sm mt-6">
@@ -233,6 +223,12 @@ export default function Component() {
             </p>
           </div>
         </div>
+
+        <PersonalityTestSection
+          heading="Test"
+          description="To better understand your skills and preferences, I have prepared a short personality test. This will help me find the best job opportunities for you at Reply."
+          questions={["test question 1", "test question 2", "test question 3", "test question 4", "test question 5"]}
+        />
 
         <div ref={firstQuestionRef}>
           <OpenQuestion
