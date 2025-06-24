@@ -1,10 +1,10 @@
 "use client"
 
 import type React from "react"
+import { useState, useRef, useEffect } from "react"
 
 import { Upload, Plus, FileText, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState, useRef } from "react"
 import { OpenQuestion } from "./open-question"
 import { Offerings, OpenPosition } from "./offerings"
 import { UserApi } from "./api-client"
@@ -14,19 +14,51 @@ import { LoadingButton } from "./loading-button"
 export default function Component() {
   const client = new UserApi();
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [isDragOver, setIsDragOver] = useState(false)
-  const [uuid, setUuid] = useState<string>("")
-  const [question1, setQuestion1] = useState<string>("")
-  const [question2, setQuestion2] = useState<string>("")
-  const [question3, setQuestion3] = useState<string>("")
-  const [openPositions, setOpenPositions] = useState<OpenPosition[]>([])
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const personalityTestRef = useRef<HTMLDivElement>(null)
-  const firstQuestionRef = useRef<HTMLDivElement>(null)
-  const secondQuestionRef = useRef<HTMLDivElement>(null)
-  const thirdQuestionRef = useRef<HTMLDivElement>(null)
-  const openPositionRef = useRef<HTMLDivElement>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [uuid, setUuid] = useState<string>("");
+  const [question1, setQuestion1] = useState<string>("");
+  const [question2, setQuestion2] = useState<string>("");
+  const [question3, setQuestion3] = useState<string>("");
+  const [openPositions, setOpenPositions] = useState<OpenPosition[]>([]);
+  const [currentSection, setCurrentSection] = useState<number>(0);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const personalityTestRef = useRef<HTMLDivElement>(null);
+  const firstQuestionRef = useRef<HTMLDivElement>(null);
+  const secondQuestionRef = useRef<HTMLDivElement>(null);
+  const thirdQuestionRef = useRef<HTMLDivElement>(null);
+  const openPositionRef = useRef<HTMLDivElement>(null);
+
+  const sections = [
+    { ref: null, isTop: true }, // Top of the page
+    { ref: personalityTestRef },
+    { ref: firstQuestionRef },
+    { ref: secondQuestionRef },
+    { ref: thirdQuestionRef },
+    { ref: openPositionRef },
+  ];
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sectionIndex = sections.findIndex((section) => {
+        if (section.isTop) {
+          return window.scrollY === 0;
+        }
+        if (section.ref?.current) {
+          const rect = section.ref.current.getBoundingClientRect();
+          return rect.top >= 0 && rect.top <= window.innerHeight / 2;
+        }
+        return false;
+      });
+      if (sectionIndex !== -1) {
+        setCurrentSection(sectionIndex);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [sections]);
 
   const handleFileSelect = (file: File) => {
     // Validate file type
@@ -299,12 +331,16 @@ export default function Component() {
           />
         </div>
 
-
         {/* Progress Indicator */}
         <div className="fixed right-6 top-1/2 transform -translate-y-1/2 space-y-2">
-          <div className="w-3 h-8 bg-[#00ea51] rounded-full"></div>
-          <div className="w-3 h-3 bg-[#d6d6d6] rounded-full"></div>
-          <div className="w-3 h-3 bg-[#d6d6d6] rounded-full"></div>
+          {sections.map((section, index) => (
+            <div
+              key={index}
+              className={`w-3 h-3 rounded-full ${
+                index === currentSection ? "bg-[#00ea51] h-8" : "bg-[#d6d6d6]"
+              }`}
+            ></div>
+          ))}
         </div>
       </div >
     </div>
