@@ -168,6 +168,7 @@ def get_offerings_by_user(uid: UUID) -> OfferingRequest:
     jobs_docs = json.loads(ret.output[0].content[0].text)  # type: ignore # TODO - add check
     jobs = [Jobs(**doc) for doc in jobs_docs["output"]]
     reasoning = jobs_docs["reasoning"]
+    print(jobs)
     return OfferingRequest(output=jobs, reasoning=reasoning)
 
 

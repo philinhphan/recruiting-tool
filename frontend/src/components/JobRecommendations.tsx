@@ -1,43 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApplicationContext } from '../contexts/ApplicationContext';
 import { getJobRecommendations, applyForJob } from '../services/userService';
-import { JobRecommendation as JobRecommendationType } from '../types/api';
+import type { JobRecommendation as JobRecommendationType } from '../types/api';
 
 const JobRecommendations: React.FC = () => {
   const { user, setIsLoading, setError, setCurrentStep } = useApplicationContext();
   const [recommendations, setRecommendations] = useState<JobRecommendationType[]>([]);
   const [isFetchingRecommendations, setIsFetchingRecommendations] = useState<boolean>(true);
-  const [selectedJob, setSelectedJob] = useState<JobRecommendationType | null>(null);
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
-    if (user && user.uuid) {
-      setIsFetchingRecommendations(true);
-      setError(null);
-      getJobRecommendations(user.uuid)
-        .then(fetchedRecommendations => {
-          setRecommendations(fetchedRecommendations || []);
-          if (!fetchedRecommendations || fetchedRecommendations.length === 0) {
-            // Handled by the render logic below for "Talent Pool" message
-          }
-        })
-        .catch(err => {
-          setError(err.message || 'Failed to fetch job recommendations.');
-          console.error(err);
-        })
-        .finally(() => {
-          setIsFetchingRecommendations(false);
-          setIsLoading(false); // Global loading
-        });
-    } else {
+    if (!user || !user.uuid) {
       setError('User not found. Please complete previous steps.');
       setIsFetchingRecommendations(false);
+      return;
     }
+
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+
+    setIsLoading(true);
+    setIsFetchingRecommendations(true);
+    setError(null);
+
+    getJobRecommendations(user.uuid)
+      .then(fetchedRecommendations => {
+        setRecommendations(fetchedRecommendations || []);
+      })
+      .catch(err => {
+        setError(err.message || 'Failed to fetch job recommendations.');
+        console.error(err);
+      })
+      .finally(() => {
+        setIsFetchingRecommendations(false);
+        setIsLoading(false);
+      });
   }, [user, setError, setIsLoading]);
 
   const handleViewDetails = (job: JobRecommendationType) => {
     // For now, just log or set selectedJob. Could open a modal or new view.
-    setSelectedJob(job);
     console.log('Viewing details for:', job);
     // If job.detailsUrl exists, could navigate: window.open(job.detailsUrl, '_blank');
     alert(`Job Details:\nTitle: ${job.title}\nDescription: ${job.description}\nJob Fit: ${job.jobFitScore}%\nCompany Fit: ${job.companyFitScore}%`);

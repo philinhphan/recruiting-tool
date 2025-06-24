@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, UserBase, PersonalityScores, UserQuestion } from '../types/api';
+import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import type { User, UserBase, PersonalityScores, UserQuestion } from '../types/api';
 
 interface ApplicationState {
   fileId: string | null;

@@ -1,11 +1,15 @@
 import apiClient from './apiClient';
-import {
+import type {
   UserBase,
   User,
   FileUploadResponse,
   UserInfoByFileResponse,
   CreateUserRequest,
+  PersonalizedQuestion,
+  JobRecommendation,
+  ApplyJobResponse,
   // CreateUserResponse, // Assuming create_user returns the user object directly
+  OfferingRequest,
 } from '../types/api';
 
 /**
@@ -16,17 +20,15 @@ import {
  */
 export const uploadCvFile = async (file: File): Promise<FileUploadResponse> => {
   const formData = new FormData();
-  formData.append('file', file); // The backend endpoint will expect a field named 'file'
+  formData.append('file', file);
 
-  // Assuming the endpoint is /users/upload_cv or similar.
-  // This needs to match the actual backend API endpoint.
-  // Based on the spec "upload_file -> FID", let's assume a generic file upload endpoint
-  // that the backend might map to CV processing.
-  // Or it could be something like /cv/upload
-  return apiClient<FileUploadResponse>('/files/upload', { // Endpoint needs to be confirmed
+  // Backend expects POST /file and returns raw UUID string
+  const fid = await apiClient<string>('/file', {
     method: 'POST',
     body: formData,
   });
+
+  return { file_id: fid } as FileUploadResponse;
 };
 
 /**
@@ -36,8 +38,7 @@ export const uploadCvFile = async (file: File): Promise<FileUploadResponse> => {
  * @returns A promise that resolves to UserInfoByFileResponse (UserBase).
  */
 export const getUserInfoByFileId = async (fileId: string): Promise<UserInfoByFileResponse> => {
-  // Endpoint needs to be confirmed. Example: /users/info_by_file/{file_id}
-  return apiClient<UserInfoByFileResponse>(`/files/${fileId}/user_info`);
+  return apiClient<UserInfoByFileResponse>(`/file/${fileId}/userdata`);
 };
 
 /**
@@ -51,14 +52,7 @@ export const getUserInfoByFileId = async (fileId: string): Promise<UserInfoByFil
  * @returns A promise that resolves to the created User object.
  */
 export const createUser = async (userData: CreateUserRequest): Promise<User> => {
-  // Endpoint needs to be confirmed. Example: /users
-  // The backend route for user creation.
-  // The spec "create_user(userBase) -> UID" implies the response might just be the UID.
-  // However, typical REST APIs return the created resource.
-  // For now, assuming it returns the full user object.
-  // If it returns { uuid: string }, the type in api.ts (CreateUserResponse) will need adjustment.
-  // Let's align with the User type directly if it returns the full user.
-  return apiClient<User>('/users', {
+  return apiClient<User>('/user', {
     method: 'POST',
     body: userData,
   });
@@ -72,9 +66,8 @@ export const createUser = async (userData: CreateUserRequest): Promise<User> => 
  * @returns A promise that resolves to the updated User object.
  */
 export const updateUser = async (userId: string, userData: Partial<UserBase>): Promise<User> => {
-  // Endpoint needs to be confirmed. Example: /users/{user_id}
-  return apiClient<User>(`/users/${userId}`, {
-    method: 'PATCH', // Or PUT, depending on backend implementation
+  return apiClient<User>(`/user/${userId}`, {
+    method: 'PATCH',
     body: userData,
   });
 };
@@ -85,14 +78,22 @@ export const updateUser = async (userId: string, userData: Partial<UserBase>): P
  * @returns A promise that resolves to an array of PersonalizedQuestion objects.
  */
 export const getPersonalizedQuestions = async (userId: string): Promise<PersonalizedQuestion[]> => {
-  // Endpoint needs to be confirmed. Example: /users/{userId}/personalized_questions
-  return apiClient<PersonalizedQuestion[]>(`/users/${userId}/personalized_questions`);
+  // Backend exposes GET /user/{uid}/question/{qid} for qid 0..n
+  const QUESTION_COUNT = 3; // Currently backend generates three questions
+  const requests = Array.from({ length: QUESTION_COUNT }, (_, idx) =>
+    apiClient<string>(`/user/${userId}/question/${idx}`)
+  );
+
+  const questionsTexts = await Promise.all(requests);
+
+  // Map to PersonalizedQuestion objects
+  return questionsTexts.map((text, idx) => ({ id: String(idx), text }));
 };
 
 /**
  * Submits an answer for a specific personalized question.
  * @param userId The User ID (UID).
- * @param questionId The ID of the question being answered.
+ * @param question The question text.
  * @param answer The answer text.
  * @returns A promise that resolves when the answer is successfully submitted.
  *          Backend might return the updated question or user, or just a success status.
@@ -100,13 +101,13 @@ export const getPersonalizedQuestions = async (userId: string): Promise<Personal
  */
 export const submitPersonalizedQuestionAnswer = async (
   userId: string,
-  questionId: string,
+  question: string,
   answer: string
-): Promise<void> => { // Assuming no specific content in response for now
-  // Endpoint needs to be confirmed. Example: /users/{userId}/questions/{questionId}/answer
-  return apiClient<void>(`/users/${userId}/questions/${questionId}/answer`, {
+): Promise<void> => {
+  // Backend expects POST /user/{uid}/question with {question, answer}
+  return apiClient<void>(`/user/${userId}/question`, {
     method: 'POST',
-    body: { answer }, // SubmitAnswerRequest
+    body: { question, answer },
   });
 };
 
@@ -122,8 +123,16 @@ export const submitPersonalizedQuestionAnswer = async (
  * @returns A promise that resolves to an array of JobRecommendation objects.
  */
 export const getJobRecommendations = async (userId: string): Promise<JobRecommendation[]> => {
-  // Endpoint needs to be confirmed. Example: /users/{userId}/job_recommendations
-  return apiClient<JobRecommendation[]>(`/users/${userId}/job_recommendations`);
+  const res = await apiClient<OfferingRequest>(`/user/${userId}/offerings`);
+
+  // Map backend jobs to existing JobRecommendation type expected by UI
+  return res.output.map((job, idx) => ({
+    id: String(idx),
+    title: job.title,
+    description: job.description,
+    jobFitScore: 0,
+    companyFitScore: 0,
+  }));
 };
 
 /**

@@ -129,3 +129,14 @@ export interface ApiError {
   message: string;
   details?: any;
 }
+
+export interface JobBackend {
+  title: string;
+  locations: string[];
+  description: string;
+}
+
+export interface OfferingRequest {
+  reasoning: string;
+  output: JobBackend[];
+}

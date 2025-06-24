@@ -1,9 +1,9 @@
-import { ApiError } from '../types/api';
+import type { ApiError } from '../types/api';
 
 const API_BASE_URL = '/api/v1'; // Adjust if your backend prefix is different
 
-interface RequestOptions extends RequestInit {
-  // You can add custom options here if needed
+interface RequestOptions extends Omit<RequestInit, 'body'> {
+  body?: any; // Allow objects which will be stringified inside the client
 }
 
 async function apiClient<T>(
@@ -12,8 +12,8 @@ async function apiClient<T>(
 ): Promise<T> {
   const { body, ...customConfig } = options;
 
-  const headers: HeadersInit = {
-    ...options.headers,
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string>),
   };
 
   // Only set Content-Type if body is present and not FormData

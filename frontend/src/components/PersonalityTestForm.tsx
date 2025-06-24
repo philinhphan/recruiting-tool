@@ -1,8 +1,9 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
+import type { FormEvent } from 'react';
 import { useApplicationContext } from '../contexts/ApplicationContext';
 import { updateUser } from '../services/userService';
-import { BIG_FIVE_QUESTIONS, LIKERT_SCALE_OPTIONS, PersonalityQuestion, TRAIT_MAPPING, TraitKey } from '../constants/personalityTest';
-import { PersonalityScores } from '../types/api';
+import { BIG_FIVE_QUESTIONS, LIKERT_SCALE_OPTIONS, TRAIT_MAPPING, type PersonalityQuestion } from '../constants/personalityTest';
+import type { PersonalityScores } from '../types/api';
 
 interface Answers {
   [questionId: string]: number;

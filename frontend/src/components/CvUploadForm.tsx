@@ -1,7 +1,8 @@
-import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import { useApplicationContext } from '../contexts/ApplicationContext';
 import { uploadCvFile, getUserInfoByFileId, createUser } from '../services/userService';
-import { UserBase } from '../types/api';
+import type { UserBase } from '../types/api';
 
 const CvUploadForm: React.FC = () => {
   const {
@@ -9,6 +10,7 @@ const CvUploadForm: React.FC = () => {
     setUser,
     setExtractedCvData,
     extractedCvData,
+    isLoading,
     setIsLoading,
     setError,
     setCurrentStep,

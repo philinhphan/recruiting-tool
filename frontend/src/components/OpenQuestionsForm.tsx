@@ -1,7 +1,8 @@
-import React, { useState, useEffect, FormEvent } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import type { FormEvent } from 'react';
 import { useApplicationContext } from '../contexts/ApplicationContext';
 import { getPersonalizedQuestions, submitPersonalizedQuestionAnswer } from '../services/userService';
-import { PersonalizedQuestion as PersonalizedQuestionType } from '../types/api';
+import type { PersonalizedQuestion as PersonalizedQuestionType } from '../types/api';
 
 const OpenQuestionsForm: React.FC = () => {
   const {
@@ -10,43 +11,50 @@ const OpenQuestionsForm: React.FC = () => {
     setIsLoading,
     setError,
     setCurrentStep,
-    addQuestionResponse // To store answers in context if not returned by backend
   } = useApplicationContext();
 
   const [questions, setQuestions] = useState<PersonalizedQuestionType[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [currentAnswer, setCurrentAnswer] = useState<string>('');
   const [isFetchingQuestions, setIsFetchingQuestions] = useState<boolean>(true);
+  // Prevent multiple fetches in React 18 StrictMode and re-renders
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
-    if (user && user.uuid) {
-      setIsFetchingQuestions(true);
-      setError(null);
-      getPersonalizedQuestions(user.uuid)
-        .then(fetchedQuestions => {
-          // Filter out questions that might already be in user.questions from context, if any
-          // This depends on how state is managed across sessions/refreshes.
-          // For a simple linear flow, we assume fetchedQuestions is the source of truth for this step.
-          setQuestions(fetchedQuestions || []); // Ensure questions is always an array
-          if (!fetchedQuestions || fetchedQuestions.length === 0) {
-            // No questions, proceed to next step
-            setCurrentStep(4);
-          }
-        })
-        .catch(err => {
-          setError(err.message || 'Failed to fetch personalized questions.');
-          console.error(err);
-          // Optionally, allow retry or skip
-        })
-        .finally(() => {
-          setIsFetchingQuestions(false);
-          setIsLoading(false); // Global loading state
-        });
-    } else {
-        setError('User not found. Please complete previous steps.');
-        setIsFetchingQuestions(false);
+    // Fetch questions only once when the component mounts and we have a valid user
+    if (!user || !user.uuid) {
+      setError('User not found. Please complete previous steps.');
+      return;
     }
-  }, [user, setError, setCurrentStep, setIsLoading]);
+
+    // If we've already fetched once, skip
+    if (fetchedRef.current) return;
+
+    // Mark as fetched immediately to avoid duplicate fetches in StrictMode
+    fetchedRef.current = true;
+
+    // Set global loading indicator
+    setIsLoading(true);
+
+    setIsFetchingQuestions(true);
+    setError(null);
+
+    getPersonalizedQuestions(user.uuid)
+      .then(fetchedQuestions => {
+        setQuestions(fetchedQuestions || []);
+        if (!fetchedQuestions || fetchedQuestions.length === 0) {
+          setCurrentStep(4);
+        }
+      })
+      .catch(err => {
+        setError(err.message || 'Failed to fetch personalized questions.');
+        console.error(err);
+      })
+      .finally(() => {
+        setIsFetchingQuestions(false);
+        setIsLoading(false);
+      });
+  }, [user, questions.length, setError, setCurrentStep, setIsLoading]);
 
   const handleSubmitAnswer = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -61,7 +69,7 @@ const OpenQuestionsForm: React.FC = () => {
     const currentQuestion = questions[currentQuestionIndex];
 
     try {
-      await submitPersonalizedQuestionAnswer(user.uuid, currentQuestion.id, currentAnswer.trim());
+      await submitPersonalizedQuestionAnswer(user.uuid, currentQuestion.text, currentAnswer.trim());
 
       // Store answer in context (useful if backend doesn't return full user object)
       // The addQuestionResponse in context was an example; let's refine it or use setUser.
@@ -69,11 +77,11 @@ const OpenQuestionsForm: React.FC = () => {
       // This might be better handled if the backend returns the updated user object.
       // Or, we can update the local user object and set it.
       const updatedUserQuestions = user.questions ? [...user.questions] : [];
-      const existingQuestionIndex = updatedUserQuestions.findIndex(q => q.id === currentQuestion.id);
+      const existingQuestionIndex = updatedUserQuestions.findIndex(q => q.question === currentQuestion.text);
       if (existingQuestionIndex > -1) {
         updatedUserQuestions[existingQuestionIndex] = { ...updatedUserQuestions[existingQuestionIndex], answer: currentAnswer.trim() };
       } else {
-        updatedUserQuestions.push({ ...currentQuestion, answer: currentAnswer.trim() });
+        updatedUserQuestions.push({ question: currentQuestion.text, answer: currentAnswer.trim() });
       }
       setUser({ ...user, questions: updatedUserQuestions });
 
