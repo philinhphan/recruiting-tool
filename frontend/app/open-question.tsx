@@ -1,13 +1,15 @@
 import { Button } from "@/components/ui/button"
+import React from "react"
 
 type OpenQuestionProps = {
     question: string
     heading: string
-    answer: string
-    setAnswer: (value: string) => void
+    onContinue: (awnser: string) => void
 }
 
-export function OpenQuestion({ question, heading, answer, setAnswer }: OpenQuestionProps) {
+export function OpenQuestion({ question, heading, onContinue }: OpenQuestionProps) {
+    const [answer, setAnswer] = React.useState<string>("")
+
     return (
         <div className="min-h-screen flex flex-col justify-center">
             <div className="text-center mb-12">
@@ -27,7 +29,7 @@ export function OpenQuestion({ question, heading, answer, setAnswer }: OpenQuest
                     placeholder="Type your answer here (max 500 characters)..."
                     style={{ border: "none" }}
                     value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
+                    onChange={(e) => {setAnswer(e.target.value)}}
                 />
             </div>
 
@@ -41,7 +43,7 @@ export function OpenQuestion({ question, heading, answer, setAnswer }: OpenQuest
                     disabled={!(answer.length > 10)}
                     onClick={() => {
                         if (answer.length > 10) {
-                            alert(`Processing answer...`)
+                            onContinue(answer)
                         }
                     }}
                 >

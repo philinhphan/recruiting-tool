@@ -2,19 +2,18 @@ services:
   nginx:
     image: nginx:alpine
     environment:
-      - FRONTEND=host.docker.internal:80
-      - BACKEND=host.docker.internal:8000
+      - FRONTEND=flash_frontend:3000
+      - BACKEND=flash_backend:8000
       - NGINX_SERVER_NAME=localhost
     ports:
       - 8080:8080
     volumes:
       - ./proxy/nginx.conf:/etc/nginx/templates/default.conf.template
-    networks:
-      - intranet
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
   mongo:
+    container_name: flash_mongo
     image: "mongo:latest"
     ports:
       - 27017:27017
@@ -31,14 +30,23 @@ services:
     restart: always
 
   backend:
+    container_name: flash_backend
     build: ../backend
+    environment:
+      - MONGO_HOST=flash_mongo
+      - APP_OPENAI=${APP_OPENAI}
     ports:
       - 8000:8000
     profiles:
       - app
 
-networks:
-  intranet:
+  frontend:
+    container_name: flash_frontend
+    build: ../frontend
+    ports:
+      - 3000:3000
+    profiles:
+      - app
 
 volumes:
   mongoDB:

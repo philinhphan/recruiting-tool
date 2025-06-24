@@ -5,15 +5,18 @@ import type React from "react"
 import { Upload, Plus, FileText, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useRef } from "react"
-import React from "react"
 import { OpenQuestion } from "./open-question"
+import { UserApi } from "./api-client"
 
 export default function Component() {
+  const client = new UserApi();
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
-  const [answer1, setAnswer1] = useState<string>("")
-  const [answer2, setAnswer2] = useState<string>("")
-  const [answer3, setAnswer3] = useState<string>("")
+  const [uuid, setUuid] = useState<string>("")
+  const [question1, setQuestion1] = useState<string>("")
+  const [question2, setQuestion2] = useState<string>("")
+  const [question3, setQuestion3] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = (file: File) => {
@@ -181,9 +184,16 @@ export default function Component() {
                 : "bg-[#d6d6d6] text-[#6e6e6e] cursor-not-allowed"
                 }`}
               disabled={!selectedFile}
-              onClick={() => {
+              onClick={async () => {
                 if (selectedFile) {
-                  alert(`Processing ${selectedFile.name}...`)
+                  const response = await client.uploadFilePost(selectedFile)
+                  const userInfo = await client.getUserinfoByFileFileFidUserdataGet(response.data)
+                  const user = await client.createUserUserPost(userInfo.data)
+                  setUuid(user.data.uuid === undefined ? "" : user.data.uuid);
+                  if (user.data.uuid !== undefined) {
+                    const question = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 0)
+                    setQuestion1(question.data)
+                  }
                 }
               }}
             >
@@ -201,23 +211,45 @@ export default function Component() {
 
         <OpenQuestion
           heading="A question just for you..."
-          question="I see that you've worked on several data analysis projects during your time at XYZ Company. Can you walk me through a specific instance where you faced a significant challenge with a dataset and how you overcame it? I'm particularly interested in understanding your problem-solving process and the tools you used."
-          answer={answer1}
-          setAnswer={setAnswer1}
+          question={question1}
+          onContinue={async (answer) => {
+            const data = {
+              question: question1,
+              answer: answer
+            }
+
+            await client.postQuestionByUserUserUidQuestionPost(uuid, data)
+            const question = await client.getQuestionByUserUserUidQuestionQidGet(uuid, 1)
+            setQuestion2(question.data);
+          }}
         />
 
         <OpenQuestion
           heading="Let us test your skills..."
-          question="I see that you've worked on several data analysis projects during your time at XYZ Company. Can you walk me through a specific instance where you faced a significant challenge with a dataset and how you overcame it? I'm particularly interested in understanding your problem-solving process and the tools you used."
-          answer={answer2}
-          setAnswer={setAnswer2}
+          question={question2}
+          onContinue={async (answer) => {
+            const data = {
+              question: question2,
+              answer: answer
+            }
+
+            await client.postQuestionByUserUserUidQuestionPost(uuid, data)
+            const question = await client.getQuestionByUserUserUidQuestionQidGet(uuid, 2)
+            setQuestion3(question.data)
+          }}
         />
 
         <OpenQuestion
           heading="What do you want to do at Reply..."
-          question="I see that you've worked on several data analysis projects during your time at XYZ Company. Can you walk me through a specific instance where you faced a significant challenge with a dataset and how you overcame it? I'm particularly interested in understanding your problem-solving process and the tools you used."
-          answer={answer3}
-          setAnswer={setAnswer3}
+          question={question3}
+          onContinue={async (answer) => {
+            const data = {
+              question: question3,
+              answer: answer
+            }
+
+            await client.postQuestionByUserUserUidQuestionPost(uuid, data)
+          }}
         />
       </div>
 
