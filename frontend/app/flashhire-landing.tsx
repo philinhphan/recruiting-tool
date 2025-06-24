@@ -224,14 +224,6 @@ export default function Component() {
                 disabled={!selectedFile}
                 onClick={async () => {
                   if (selectedFile) {
-                    // Scroll to first question after a short delay
-                    setTimeout(() => {
-                      personalityTestRef.current?.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                      });
-                    }, 100);
-
                     const response = await client.uploadFilePost(selectedFile)
                     const userInfo = await client.getUserinfoByFileFileFidUserdataGet(response.data)
                     const user = await client.createUserUserPost(userInfo.data)
@@ -240,11 +232,13 @@ export default function Component() {
                       const question1 = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 0)
                       setQuestion1(question1.data)
 
-                      const question2 = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 1)
-                      setQuestion2(question2.data)
-
-                      const question3 = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 2)
-                      setQuestion3(question3.data)
+                      // Scroll to first question after a short delay
+                      setTimeout(() => {
+                        personalityTestRef.current?.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'start'
+                        });
+                      }, 100);
                     }
                   }
                 }}
@@ -282,6 +276,9 @@ export default function Component() {
                 answer: answer
               }
 
+              const question2 = await client.getQuestionByUserUserUidQuestionQidGet(uuid, 1)
+              setQuestion2(question2.data)
+
               await client.postQuestionByUserUserUidQuestionPost(uuid, data)
             }}
           />
@@ -297,6 +294,9 @@ export default function Component() {
                 question: question2,
                 answer: answer
               }
+
+              const question3 = await client.getQuestionByUserUserUidQuestionQidGet(uuid, 2)
+              setQuestion3(question3.data)
 
               await client.postQuestionByUserUserUidQuestionPost(uuid, data)
             }}
