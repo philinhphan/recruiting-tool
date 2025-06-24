@@ -54,20 +54,22 @@ export function PersonalityTestSection({ heading, description, questions, jumpTo
                 <form className="space-y-6">
                     {questions.map((question, idx) => (
                         <div key={idx} className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.1)_0px_0px_20px_0px] p-6 text-left flex flex-col md:flex-row md:items-center md:justify-between">
-                            <label className="text-base font-medium text-[#000000] mb-2 md:mb-0 md:mr-6" htmlFor={`question-${idx}`}>
-                                {question}
-                            </label>
+                            <div className="max-w-80">
+                                <label className="text-base font-medium text-[#000000] mb-2 md:mb-0 md:mr-6" htmlFor={`question-${idx}`}>
+                                    {question}
+                                </label>
+                            </div>
                             <div className="flex space-x-6 mt-2 md:mt-0">
                                 {[1, 2, 3, 4, 5].map((num) => (
                                     <label key={num} className="flex flex-col items-center cursor-pointer">
                                         <input
                                             type="radio"
                                             name={`question-${idx}`}
-                                            value={toName(num)}
+                                            value={num}
                                             className="appearance-none w-6 h-6 rounded-full border border-gray-300 checked:bg-[#00ea51] checked:border-[#00ea51] focus:outline-none transition"
                                             onChange={() => handleSelection(idx, num)}
                                         />
-                                        <span className="mt-1 text-sm text-gray-700">{num}</span>
+                                        <span className="mt-1 text-sm text-gray-700">{toName(num)}</span>
                                     </label>
                                 ))}
                             </div>
