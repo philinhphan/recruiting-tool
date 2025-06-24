@@ -22,7 +22,11 @@ export default function Component() {
   const [question3, setQuestion3] = useState<string>("")
   const [openPositions, setOpenPositions] = useState<OpenPosition[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const personalityTestRef = useRef<HTMLDivElement>(null)
   const firstQuestionRef = useRef<HTMLDivElement>(null)
+  const secondQuestionRef = useRef<HTMLDivElement>(null)
+  const thirdQuestionRef = useRef<HTMLDivElement>(null)
+  const openPositionRef = useRef<HTMLDivElement>(null)
 
   const handleFileSelect = (file: File) => {
     // Validate file type
@@ -185,10 +189,6 @@ export default function Component() {
           <div className="text-center">
             <div className="flex justify-center">
               <LoadingButton
-                className={`px-12 py-6 text-lg font-semibold rounded-full transition-all ${selectedFile
-                  ? "bg-[#00ea51] hover:bg-[#00d147] text-white"
-                  : "bg-[#d6d6d6] text-[#6e6e6e] cursor-not-allowed"
-                  }`}
                 disabled={!selectedFile}
                 onClick={async () => {
                   if (selectedFile) {
@@ -199,10 +199,10 @@ export default function Component() {
                     if (user.data.uuid !== undefined) {
                       const question = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 0)
                       setQuestion1(question.data)
-                      
+
                       // Scroll to first question after a short delay
                       setTimeout(() => {
-                        firstQuestionRef.current?.scrollIntoView({ 
+                        personalityTestRef.current?.scrollIntoView({
                           behavior: 'smooth',
                           block: 'start'
                         });
@@ -224,16 +224,20 @@ export default function Component() {
           </div>
         </div>
 
+        <div ref={personalityTestRef}>
         <PersonalityTestSection
           heading="Test"
+          jumpTo={firstQuestionRef}
           description="To better understand your skills and preferences, I have prepared a short personality test. This will help me find the best job opportunities for you at Reply."
           questions={["test question 1", "test question 2", "test question 3", "test question 4", "test question 5"]}
         />
+        </div>
 
         <div ref={firstQuestionRef}>
           <OpenQuestion
             heading="A question just for you..."
             question={question1}
+            jumpTo={secondQuestionRef}
             onContinue={async (answer) => {
               const data = {
                 question: question1,
@@ -247,54 +251,62 @@ export default function Component() {
           />
         </div>
 
-        <OpenQuestion
-          heading="Let us test your skills..."
-          question={question2}
-          onContinue={async (answer) => {
-            const data = {
-              question: question2,
-              answer: answer
-            }
+        <div ref={secondQuestionRef}>
+          <OpenQuestion
+            heading="Let us test your skills..."
+            question={question2}
+            jumpTo={thirdQuestionRef}
+            onContinue={async (answer) => {
+              const data = {
+                question: question2,
+                answer: answer
+              }
 
-            await client.postQuestionByUserUserUidQuestionPost(uuid, data)
-            const question = await client.getQuestionByUserUserUidQuestionQidGet(uuid, 2)
-            setQuestion3(question.data)
-          }}
-        />
+              await client.postQuestionByUserUserUidQuestionPost(uuid, data)
+              const question = await client.getQuestionByUserUserUidQuestionQidGet(uuid, 2)
+              setQuestion3(question.data)
+            }}
+          />
+        </div>
 
-        <OpenQuestion
-          heading="What do you want to do at Reply..."
-          question={question3}
-          onContinue={async (answer) => {
-            const data = {
-              question: question3,
-              answer: answer
-            }
+        <div ref={thirdQuestionRef}>
+          <OpenQuestion
+            heading="What do you want to do at Reply..."
+            question={question3}
+            jumpTo={openPositionRef}
+            onContinue={async (answer) => {
+              const data = {
+                question: question3,
+                answer: answer
+              }
 
-            await client.postQuestionByUserUserUidQuestionPost(uuid, data)
-            const positions = await client.getOfferingsByUserUserUidOfferingsGet(uuid)
-            const test = positions.data;
-            setOpenPositions(test.output.map((item) => ({
-              title: item.title,
-              description: item.description,
-              location: item.locations.join(", ")
-            })));
-          }}
-        />
+              await client.postQuestionByUserUserUidQuestionPost(uuid, data)
+              const positions = await client.getOfferingsByUserUserUidOfferingsGet(uuid)
+              const test = positions.data;
+              setOpenPositions(test.output.map((item) => ({
+                title: item.title,
+                description: item.description,
+                location: item.locations.join(", ")
+              })));
+            }}
+          />
+        </div>
 
-        <Offerings
-          heading="Top job positions for you"
-          openPositions={openPositions}
-        />
+        <div ref={openPositionRef}>
+          <Offerings
+            heading="Top job positions for you"
+            openPositions={openPositions}
+          />
+        </div>
 
-      </div>
 
-      {/* Progress Indicator */}
-      <div className="fixed right-6 top-1/2 transform -translate-y-1/2 space-y-2">
-        <div className="w-3 h-8 bg-[#00ea51] rounded-full"></div>
-        <div className="w-3 h-3 bg-[#d6d6d6] rounded-full"></div>
-        <div className="w-3 h-3 bg-[#d6d6d6] rounded-full"></div>
-      </div>
-    </div >
+        {/* Progress Indicator */}
+        <div className="fixed right-6 top-1/2 transform -translate-y-1/2 space-y-2">
+          <div className="w-3 h-8 bg-[#00ea51] rounded-full"></div>
+          <div className="w-3 h-3 bg-[#d6d6d6] rounded-full"></div>
+          <div className="w-3 h-3 bg-[#d6d6d6] rounded-full"></div>
+        </div>
+      </div >
+    </div>
   )
 }

@@ -1,13 +1,15 @@
 import { Button } from "@/components/ui/button"
-import React from "react"
+import { LoadingButton } from "./loading-button"
+import React, { RefObject } from "react"
 
 type OpenQuestionProps = {
     question: string
     heading: string
-    onContinue: (awnser: string) => void
+    onContinue: (answer: string) => Promise<void>
+    jumpTo: RefObject<HTMLDivElement | null>
 }
 
-export function OpenQuestion({ question, heading, onContinue }: OpenQuestionProps) {
+export function OpenQuestion({ question, heading, onContinue, jumpTo }: OpenQuestionProps) {
     const [answer, setAnswer] = React.useState<string>("")
 
     return (
@@ -29,26 +31,31 @@ export function OpenQuestion({ question, heading, onContinue }: OpenQuestionProp
                     placeholder="Type your answer here (max 500 characters)..."
                     style={{ border: "none" }}
                     value={answer}
-                    onChange={(e) => {setAnswer(e.target.value)}}
+                    onChange={(e) => { setAnswer(e.target.value) }}
                 />
             </div>
 
             {/* Continue Button */}
             <div className="text-center">
-                <Button
-                    className={`px-12 py-6 text-lg font-semibold rounded-full transition-all ${answer.length > 10
-                        ? "bg-[#00ea51] hover:bg-[#00d147] text-white"
-                        : "bg-[#d6d6d6] text-[#6e6e6e] cursor-not-allowed"
-                        }`}
-                    disabled={!(answer.length > 10)}
-                    onClick={() => {
-                        if (answer.length > 10) {
-                            onContinue(answer)
-                        }
-                    }}
-                >
-                    Continue
-                </Button>
+                <div className="flex justify-center">
+                    <LoadingButton
+                        disabled={!(answer.length > 10)}
+                        onClick={async () => {
+                            if (answer.length > 10) {
+                                await onContinue(answer)
+                                setTimeout(() => {
+                                    jumpTo.current?.scrollIntoView({
+                                        behavior: 'smooth',
+                                        block: 'start'
+                                    });
+                                }, 100);
+                            }
+                        }}
+                    >
+                        Continue
+                    </LoadingButton>
+
+                </div>
 
                 <p className="text-[#6e6e6e] text-sm mt-6">
                     By continuing, you agree to{" "}
@@ -56,6 +63,7 @@ export function OpenQuestion({ question, heading, onContinue }: OpenQuestionProp
                     <span className="text-[#00ea51] cursor-pointer hover:underline">Privacy Policy</span>, and{" "}
                     <span className="text-[#00ea51] cursor-pointer hover:underline">Cookie Policy</span>
                 </p>
+
             </div>
         </div>
     )
