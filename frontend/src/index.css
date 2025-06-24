@@ -1,0 +1,41 @@
+/* Global styles and resets */
+/* This file is imported by main.tsx and affects the whole application */
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark; /* Example: support light and dark modes */
+  /* color: rgba(255, 255, 255, 0.87); */ /* Default dark mode text */
+  /* background-color: #242424; */ /* Default dark mode background */
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Basic body styling if not overridden by App.css or component styles */
+body {
+  margin: 0;
+  /* display: flex; */ /* Can cause issues if not intended for full app structure */
+  /* place-items: center; */ /* Can cause issues */
+  /* min-width: 320px; */
+  /* min-height: 100vh; */
+}
+
+
+/* Dark mode specific styles if needed */
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  /* Example: a, button styles for light mode if they differ */
+}
+
+/* Remove Vite's default button styling if it conflicts */
+/* button { ... } */
+/* button:hover { ... } */
+/* button:focus, button:focus-visible { ... } */

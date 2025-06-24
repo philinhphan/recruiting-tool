@@ -1,0 +1,29 @@
+/* Basic reset or app-specific global styles can go here if preferred over inline in App.tsx */
+/* For now, keeping it minimal as most is handled in App.tsx <style> tag */
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f4f7f6; /* Light gray background for the page */
+  color: #333; /* Default text color */
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Minimal styling for .App defined in App.tsx takes precedence if more specific */
+/* This App.css can be used for broader layout or component-specific styles later */
+/* For example, if we extract components that need consistent styling not handled by App.tsx <style> */
+/* Let's remove Vite's default logo and card styling */
+/*
+.logo { ... }
+.logo.react { ... }
+.card { ... }
+.read-the-docs { ... }
+*/
