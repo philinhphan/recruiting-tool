@@ -2,8 +2,8 @@ services:
   nginx:
     image: nginx:alpine
     environment:
-      - FRONTEND=host.docker.internal:3000
-      - BACKEND=host.docker.interal:8000
+      - FRONTEND=flash_frontend:3000
+      - BACKEND=flash_backend:8000
       - NGINX_SERVER_NAME=localhost
     ports:
       - 8080:8080

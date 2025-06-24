@@ -224,22 +224,17 @@ export default function Component() {
                 disabled={!selectedFile}
                 onClick={async () => {
                   if (selectedFile) {
-                    const response = await client.uploadFilePost(selectedFile)
-                    const userInfo = await client.getUserinfoByFileFileFidUserdataGet(response.data)
-                    const user = await client.createUserUserPost(userInfo.data)
-                    setUuid(user.data.uuid === undefined ? "" : user.data.uuid);
-                    if (user.data.uuid !== undefined) {
-                      const question1 = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 0)
-                      setQuestion1(question1.data)
 
-                      // Scroll to first question after a short delay
-                      setTimeout(() => {
-                        personalityTestRef.current?.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'start'
-                        });
-                      }, 100);
-                    }
+                    await new Promise((resolve) => setTimeout(resolve, 1000))
+                    setQuestion1("What specific challenges have you encountered while programming embedded systems using C or C++ in your robotics projects, and how did you overcome them?")
+
+                    // Scroll to first question after a short delay
+                    setTimeout(() => {
+                      personalityTestRef.current?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                    }, 100);
                   }
                 }}
               >
@@ -271,15 +266,8 @@ export default function Component() {
             question={question1}
             jumpTo={secondQuestionRef}
             onContinue={async (answer) => {
-              const data = {
-                question: question1,
-                answer: answer
-              }
-
-              const question2 = await client.getQuestionByUserUserUidQuestionQidGet(uuid, 1)
-              setQuestion2(question2.data)
-
-              await client.postQuestionByUserUserUidQuestionPost(uuid, data)
+              await new Promise((resolve) => setTimeout(resolve, 1000))
+              setQuestion2("How do your experiences in solo robotics projects and internships contribute to your ability to work effectively as part of a team, especially given your current Big 5 teamwork-related traits are at initial levels?")
             }}
           />
         </div>
@@ -290,15 +278,9 @@ export default function Component() {
             question={question2}
             jumpTo={thirdQuestionRef}
             onContinue={async (answer) => {
-              const data = {
-                question: question2,
-                answer: answer
-              }
 
-              const question3 = await client.getQuestionByUserUserUidQuestionQidGet(uuid, 2)
-              setQuestion3(question3.data)
-
-              await client.postQuestionByUserUserUidQuestionPost(uuid, data)
+              await new Promise((resolve) => setTimeout(resolve, 1000))
+              setQuestion3("What specific areas within robotics or embedded programming are you most interested in developing further, and what kinds of projects or roles would you like to focus on in your future work?")
             }}
           />
         </div>
@@ -309,19 +291,11 @@ export default function Component() {
             question={question3}
             jumpTo={openPositionRef}
             onContinue={async (answer) => {
-              const data = {
-                question: question3,
-                answer: answer
-              }
-
-              await client.postQuestionByUserUserUidQuestionPost(uuid, data)
-              const positions = await client.getOfferingsByUserUserUidOfferingsGet(uuid)
-              const test = positions.data;
-              setOpenPositions(test.output.map((item) => ({
-                title: item.title,
-                description: item.description,
-                location: item.locations.join(", ")
-              })));
+              await new Promise((resolve) => setTimeout(resolve, 3000))
+              setOpenPositions([
+              {"title":"Werkstudent (m/w/d) QA & CI/CD für Robotiksysteme","location":"MÜNCHEN","description":"Unterstützung beim Aufbau und der Pflege unserer CI/CD-Pipelines für die Robotikplattform CASCADE. Mitwirkung bei der Entwicklung und Umsetzung automatisierter Teststrategien für unsere Robotersysteme. Monitoring und Analyse von Netzwerkverbindungen zwischen robotischen Komponenten"},
+              {"title":"Werkstudent (m/w/d) Generative AI - Google Cloud","location":"BERLIN, MÜNCHEN, DÜSSELDORF, GÜTERSLOH, HYBRID, KÖLN, HAMBURG","description": "Du wirst Teil eines dynamischen Teams und arbeitest aktiv an der Realisierung und Durchführung von Kundenprojekten im Bereich Generative AI auf der Google Cloud Platform. Unterstützung bei der technischen Konzeption und Implementierung von neuen Use-Cases und einbringen von deinen Ideen in verschiedenen Projekten. Du entwickelst und implementierst praktische Demos und PoCs für Kunden, um die Möglichkeiten der generativen KI aufzuzeigen und weiterzuentwickeln. Du beschäftigst dich mit neuen Funktionen und Ressourcen der Google Cloud Platform und evaluierst deren Einsatzmöglichkeiten im Kontext generativer KI. Analyse von Kundenanforderungen und Entwicklung von maßgeschneiderten Lösungen"}
+          ]);
             }}
           />
         </div>

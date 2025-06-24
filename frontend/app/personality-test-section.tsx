@@ -85,6 +85,7 @@ export function PersonalityTestSection({ heading, description, questions, jumpTo
                         className={`px-12 py-6 text-lg font-semibold rounded-full transition-all bg-[#00ea51] hover:bg-[#00d147] text-white`}
                         disabled={!allQuestionsAnswered}
                         onClick={async () => {
+                            await new Promise((resolve) => setTimeout(resolve, 1000))
                             setTimeout(() => {
                                 jumpTo.current?.scrollIntoView({
                                     behavior: 'smooth',
