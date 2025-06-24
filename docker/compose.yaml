@@ -39,6 +39,7 @@ services:
       - 8000:8000
     profiles:
       - app
+      - frontend
 
   frontend:
     container_name: flash_frontend
@@ -47,6 +48,7 @@ services:
       - 3000:3000
     profiles:
       - app
+      - backend
 
 volumes:
   mongoDB:

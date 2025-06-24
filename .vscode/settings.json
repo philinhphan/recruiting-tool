@@ -22,4 +22,5 @@
     "restoreTerminals.runOnStartup": true,
     "restoreTerminals.keepExistingTerminalsOpen": true,
     "python-envs.pythonProjects": [],
+    "nixEnvSelector.nixFile": "${workspaceFolder}/default.nix",
 }
