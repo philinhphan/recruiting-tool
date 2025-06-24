@@ -79,8 +79,8 @@ def download_by_user(uid: UUID) -> StreamingResponse:
 
 
 @app.get("/file/{fid}", tags=[OpenAPITags.USER, OpenAPITags.DASHBOARD], status_code=HTTPStatus.OK)
-def download_by_id(uid: UUID) -> StreamingResponse:
-    user = userCRUD.get(uid)
+def download_by_id(fid: UUID) -> StreamingResponse:
+    user = userCRUD.get(fid)
     if not user.file_id:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No cv found")
     content = filesCRUD.get(user.file_id)
