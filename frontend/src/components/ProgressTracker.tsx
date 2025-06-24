@@ -3,16 +3,23 @@ import { useApplicationContext } from '../contexts/ApplicationContext';
 
 const STEPS = [
   { id: 0, name: 'Start' }, // Initial, pre-CV upload state
-  { id: 1, name: 'CV Uploaded' }, // CV is uploaded, name form might be shown
-  { id: 2, name: 'Personality Test' },
-  { id: 3, name: 'Open Questions' },
-  { id: 4, name: 'Job Recommendations' },
-  { id: 5, name: 'Process Complete' } // A final step after recommendations or talent pool message
+  { id: 1, name: 'CV' }, // CV is uploaded, name form might be shown
+  { id: 2, name: 'Personality' },
+  { id: 3, name: 'Questions' },
+  { id: 4, name: 'Recommendations' },
+  { id: 5, name: 'Complete' } // A final step after recommendations or talent pool message
 ];
 
-const ProgressTracker: React.FC = () => {
-  const { currentStep } = useApplicationContext();
+interface ProgressTrackerProps {
+  /**
+   * Orientation of the tracker. Defaults to "horizontal" to preserve current UI.
+   * When set to "vertical", a compact vertical bar without labels is rendered – useful for the start page sidebar.
+   */
+  orientation?: 'horizontal' | 'vertical';
+}
 
+const ProgressTracker: React.FC<ProgressTrackerProps> = ({ orientation = 'horizontal' }) => {
+  const { currentStep } = useApplicationContext();
   const trackerStyles: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'space-around',
@@ -67,18 +74,58 @@ const ProgressTracker: React.FC = () => {
       transition: 'background-color 0.3s ease',
   });
 
+  if (orientation === 'vertical') {
+    // Compact vertical view (dots + connecting line)
+    const verticalContainer: React.CSSProperties = {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '10px',
+      gap: '6px',
+    };
 
+    const dotStyles: (isActive: boolean, isCompleted: boolean) => React.CSSProperties =
+      (isActive, isCompleted) => ({
+        width: '12px',
+        height: '12px',
+        borderRadius: '50%',
+        backgroundColor: isActive ? '#04B447' : (isCompleted ? '#04B447' : '#D3D3D3'),
+        border: isActive ? '2px solid #028436' : 'none',
+      });
+
+    const connectorStyles: (isCompleted: boolean) => React.CSSProperties =
+      (isCompleted) => ({
+        width: '3px',
+        height: '24px',
+        backgroundColor: isCompleted ? '#04B447' : '#D3D3D3',
+      });
+
+    return (
+      <div style={verticalContainer}>
+        {STEPS.map((step, index) => {
+          const isActive = currentStep === step.id;
+          const isCompleted = currentStep > step.id;
+
+          return (
+            <React.Fragment key={step.id}>
+              <div style={dotStyles(isActive, isCompleted)} />
+              {index < STEPS.length - 1 && (
+                <div style={connectorStyles(currentStep > step.id)} />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Default horizontal view (existing)
   return (
     <div style={trackerStyles}>
       {STEPS.map((step, index) => {
         const isActive = currentStep === step.id;
         const isCompleted = currentStep > step.id;
-        // For the line: it's completed if the step *it originates from* is completed.
-        // Or, more accurately, if currentStep has passed the step the line leads to.
-        // So, if currentStep >= STEPS[index + 1]?.id (the next step)
-        // A simpler way: the line after a step is active if that step is completed.
         const isLineAfterStepCompleted = isCompleted || isActive;
-
 
         return (
           <React.Fragment key={step.id}>

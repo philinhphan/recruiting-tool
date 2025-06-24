@@ -136,7 +136,11 @@ const CvUploadForm: React.FC = () => {
 
   return (
     <div>
-      <h2>Applicant CV Upload</h2>
+      {/* Headline & helper text – design-only changes */}
+      <h2 style={{ textAlign: 'center', marginBottom: '6px' }}>Making applying easy with FlashHire</h2>
+      <p style={{ textAlign: 'center', marginTop: '0', marginBottom: '26px', color: '#555', maxWidth: '480px', marginInline: 'auto', lineHeight: 1.4 }}>
+        Hello there! I'm Flash, your personal AI assistant here at Reply! I'm here to help you discover the best job opportunities that match your skills and interests. With my help, applying for positions is simple and straightforward. Let me guide you through the process and make your job search a breeze. Together, we'll find the perfect role for you at Reply. Let's get started on this exciting journey!
+      </p>
       {!isCvUploaded && !isProcessingCv && (
         <div>
           <input type="file" onChange={handleFileChange} accept=".pdf,.doc,.docx,.txt" />

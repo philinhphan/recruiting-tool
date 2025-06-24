@@ -86,45 +86,140 @@ const PersonalityTestForm: React.FC = () => {
     return <p>Please complete the CV upload step first.</p>;
   }
 
-  // Group questions by trait for display
-  const questionsByTrait: Record<string, PersonalityQuestion[]> = BIG_FIVE_QUESTIONS.reduce((acc, q) => {
-    acc[q.trait] = acc[q.trait] || [];
-    acc[q.trait].push(q);
-    return acc;
-  }, {} as Record<string, PersonalityQuestion[]>);
-
   return (
     <div>
-      <h2>Big Five Personality Test</h2>
-      <p>Please rate how much you agree or disagree with each statement.</p>
+      {/* Headline & helper copy */}
+      <h2 style={{ textAlign: 'center', marginBottom: '10px' }}>Personality Assessment</h2>
+      <p style={{ textAlign: 'center', margin: 0, color: '#555' }}>We would like to get to know you better.</p>
+      <p style={{ textAlign: 'center', marginTop: '6px', marginBottom: '26px', color: '#555' }}>Please answer the following statements describing your personality as accurately as possible.</p>
+
+      {/* Inline CSS block for component-scoped styling */}
+      <style>{`
+        .likert-table {
+          width: 100%;
+          border-collapse: separate;
+          border-spacing: 0 14px; /* vertical gap for "pill" effect */
+        }
+        .likert-table th {
+          font-weight: 600;
+          font-size: 0.85rem;
+          color: #666;
+          padding-bottom: 6px;
+        }
+        .likert-table .statement-cell {
+          text-align: left;
+          padding-right: 10px;
+          white-space: nowrap;
+        }
+        .likert-table tr {
+          background: #f5f5f5;
+          border-radius: 40px;
+        }
+        .likert-table tr td:first-child {
+          border-top-left-radius: 40px;
+          border-bottom-left-radius: 40px;
+        }
+        .likert-table tr td:last-child {
+          border-top-right-radius: 40px;
+          border-bottom-right-radius: 40px;
+        }
+        .likert-table td {
+          text-align: center;
+          padding: 12px 8px;
+        }
+        .likert-radio {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          border: 2px solid #bdbdbd;
+          background: #fff;
+          cursor: pointer;
+          position: relative;
+        }
+        .likert-radio:checked {
+          background: #05C960;
+          border-color: #05C960;
+        }
+        .navigation-buttons {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 32px;
+        }
+        .btn-back {
+          background: #ffffff;
+          color: #05C960;
+          border: 2px solid #05C960;
+          padding: 10px 32px;
+          border-radius: 40px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .btn-continue {
+          background: #05C960;
+          color: #ffffff;
+          border: 2px solid #05C960;
+          padding: 10px 32px;
+          border-radius: 40px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .btn-continue:disabled {
+          background: #9edfb6;
+          border-color: #9edfb6;
+          cursor: not-allowed;
+        }
+      `}</style>
+
       <form onSubmit={handleSubmit}>
-        {Object.entries(questionsByTrait).map(([trait, qs]) => (
-          <div key={trait} style={{ marginBottom: '25px' }}>
-            <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '5px', marginBottom: '15px' }}>{trait}</h3>
-            {qs.map(question => (
-              <div key={question.id} style={{ marginBottom: '15px' }}>
-                <p>{question.text}</p>
+        <table className="likert-table">
+          <thead>
+            <tr>
+              <th className="statement-cell">I see myself as someone who...</th>
+              {LIKERT_SCALE_OPTIONS.map(option => (
+                <th key={option.value}>{option.label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {BIG_FIVE_QUESTIONS.map(question => (
+              <tr key={question.id}>
+                <td className="statement-cell">{question.text}</td>
                 {LIKERT_SCALE_OPTIONS.map(option => (
-                  <label key={option.value} style={{ marginRight: '10px', display: 'inline-block', fontWeight: 'normal' }}>
+                  <td key={option.value}>
                     <input
                       type="radio"
+                      className="likert-radio"
                       name={question.id}
                       value={option.value}
                       checked={answers[question.id] === option.value}
                       onChange={() => handleAnswerChange(question.id, option.value)}
                       required
-                      style={{ marginRight: '5px' }}
                     />
-                    {option.label} ({option.value})
-                  </label>
+                  </td>
                 ))}
-              </div>
+              </tr>
             ))}
-          </div>
-        ))}
-        <button type="submit" disabled={Object.keys(answers).length < BIG_FIVE_QUESTIONS.length}>
-          Submit Answers
-        </button>
+          </tbody>
+        </table>
+
+        <div className="navigation-buttons">
+          <button
+            type="button"
+            className="btn-back"
+            onClick={() => setCurrentStep(1)}
+          >
+            Back
+          </button>
+          <button
+            type="submit"
+            className="btn-continue"
+            disabled={Object.keys(answers).length < BIG_FIVE_QUESTIONS.length}
+          >
+            Continue
+          </button>
+        </div>
       </form>
     </div>
   );

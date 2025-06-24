@@ -3,7 +3,7 @@ import CvUploadForm from './components/CvUploadForm';
 import PersonalityTestForm from './components/PersonalityTestForm';
 import OpenQuestionsForm from './components/OpenQuestionsForm';
 import JobRecommendations from './components/JobRecommendations';
-import ProgressTracker from './components/ProgressTracker'; // Import ProgressTracker
+import ProgressTracker from './components/ProgressTracker'; // Import ProgressTracker (now supports vertical)
 import { useApplicationContext } from './contexts/ApplicationContext';
 
 // Placeholder components for other steps (none left after this)
@@ -42,6 +42,7 @@ function App() {
 
   // Basic styling for error and loading messages
   const globalStyles = `
+    /* --- Global utility classes --- */
     .loading-indicator {
       position: fixed;
       top: 10px;
@@ -50,6 +51,7 @@ function App() {
       padding: 10px;
       border-radius: 5px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      z-index: 1000;
     }
     .error-message {
       background-color: #ffdddd;
@@ -59,66 +61,103 @@ function App() {
       margin: 15px 0;
       border-radius: 5px;
     }
-    .App {
+
+    /* --- New start page layout --- */
+    .start-page {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
       font-family: sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
     }
-    .App-header {
+
+    .hero {
+      background: radial-gradient(circle at top left, #05C960 0%, #00A44C 40%, #008E42 70%, #00743A 100%);
+      color: #ffffff;
       text-align: center;
-      margin-bottom: 30px;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 20px;
+      padding: 60px 20px 120px 20px; /* bottom padding leaves space for overlapping card */
+      font-size: 1.75rem;
+      font-weight: 600;
     }
+
+    .content-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px;
+      padding: 0 20px;
+      margin-top: -90px; /* pull the card up to overlap hero */
+    }
+
+    .progress-sidebar {
+      position: sticky;
+      top: 120px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      max-width: 600px;
+      width: 100%;
+      padding: 40px 30px;
+    }
+
+    /* Form element refinements inside the card */
     label {
       display: block;
-      margin-top: 10px;
-      margin-bottom: 5px;
-      font-weight: bold;
+      margin: 12px 0 6px 0;
+      font-weight: 600;
     }
     input[type="file"], input[type="text"] {
-      width: calc(100% - 22px); /* Full width minus padding and border */
-      padding: 10px;
-      margin-bottom: 15px;
+      width: 100%;
+      padding: 12px 14px;
+      margin-bottom: 18px;
       border: 1px solid #ccc;
-      border-radius: 4px;
+      border-radius: 8px;
       box-sizing: border-box;
+      font-size: 0.95rem;
     }
     button {
-      background-color: #007bff;
-      color: white;
-      padding: 10px 15px;
+      background-color: #05C960;
+      color: #ffffff;
+      padding: 12px 18px;
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 16px;
-      margin-top: 10px;
+      font-size: 1rem;
+      font-weight: 600;
     }
     button:disabled {
-      background-color: #cccccc;
+      background-color: #9edfb6;
       cursor: not-allowed;
     }
     h2 {
-      margin-top: 30px;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 10px;
+      margin-top: 0;
+      margin-bottom: 16px;
     }
   `;
 
   return (
     <>
       <style>{globalStyles}</style>
-      <div className="App">
-        <header className="App-header">
-          <h1>Applicant Onboarding System</h1>
-          <ProgressTracker /> {/* Add ProgressTracker here */}
-        </header>
-        <main>
-          {isLoading && <div className="loading-indicator">Processing... Please wait.</div>}
-          {error && <div className="error-message">Error: {error}</div>}
-          {renderCurrentStep()}
-        </main>
+      <div className="start-page">
+        {/* Hero Section */}
+        <section className="hero">
+          Prototyping the future with us
+        </section>
+
+        {/* Main content with vertical tracker */}
+        <div className="content-wrapper">
+          <aside className="progress-sidebar">
+            <ProgressTracker orientation="vertical" />
+          </aside>
+
+          <main className="card">
+            {isLoading && <div className="loading-indicator">Processing... Please wait.</div>}
+            {error && <div className="error-message">Error: {error}</div>}
+            {renderCurrentStep()}
+          </main>
+        </div>
       </div>
     </>
   );
