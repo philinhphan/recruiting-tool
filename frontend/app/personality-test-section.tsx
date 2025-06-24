@@ -15,6 +15,23 @@ type PersonalityTestSectionProps = {
     jumpTo: RefObject<HTMLDivElement | null>
 }
 
+function toName(num: number): string {
+    switch (num) {
+        case 1:
+            return "Strongly Disagree"
+        case 2:
+            return "Disagree"
+        case 3:
+            return "Neutral"
+        case 4:
+            return "Agree"
+        case 5:
+            return "Strongly Agree"
+        default:
+            return "Unknown"
+    }
+}
+
 export function PersonalityTestSection({ heading, description, questions, jumpTo }: PersonalityTestSectionProps) {
     const [selectedAnswers, setSelectedAnswers] = React.useState<{ [key: number]: number | null }>({});
 
@@ -46,7 +63,7 @@ export function PersonalityTestSection({ heading, description, questions, jumpTo
                                         <input
                                             type="radio"
                                             name={`question-${idx}`}
-                                            value={num}
+                                            value={toName(num)}
                                             className="appearance-none w-6 h-6 rounded-full border border-gray-300 checked:bg-[#00ea51] checked:border-[#00ea51] focus:outline-none transition"
                                             onChange={() => handleSelection(idx, num)}
                                         />

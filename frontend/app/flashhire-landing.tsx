@@ -224,21 +224,27 @@ export default function Component() {
                 disabled={!selectedFile}
                 onClick={async () => {
                   if (selectedFile) {
+                    // Scroll to first question after a short delay
+                    setTimeout(() => {
+                      personalityTestRef.current?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                    }, 100);
+
                     const response = await client.uploadFilePost(selectedFile)
                     const userInfo = await client.getUserinfoByFileFileFidUserdataGet(response.data)
                     const user = await client.createUserUserPost(userInfo.data)
                     setUuid(user.data.uuid === undefined ? "" : user.data.uuid);
                     if (user.data.uuid !== undefined) {
-                      const question = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 0)
-                      setQuestion1(question.data)
+                      const question1 = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 0)
+                      setQuestion1(question1.data)
 
-                      // Scroll to first question after a short delay
-                      setTimeout(() => {
-                        personalityTestRef.current?.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'start'
-                        });
-                      }, 100);
+                      const question2 = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 1)
+                      setQuestion2(question2.data)
+
+                      const question3 = await client.getQuestionByUserUserUidQuestionQidGet(user.data.uuid, 2)
+                      setQuestion3(question3.data)
                     }
                   }
                 }}
@@ -257,12 +263,12 @@ export default function Component() {
         </div>
 
         <div ref={personalityTestRef}>
-        <PersonalityTestSection
-          heading="Test"
-          jumpTo={firstQuestionRef}
-          description="To better understand your skills and preferences, I have prepared a short personality test. This will help me find the best job opportunities for you at Reply."
-          questions={["test question 1", "test question 2", "test question 3", "test question 4", "test question 5"]}
-        />
+          <PersonalityTestSection
+            heading="Let's do a qick personality test"
+            jumpTo={firstQuestionRef}
+            description="To better understand your skills and preferences, I have prepared a short personality test. This will help me find the best job opportunities for you at Reply."
+            questions={["I see myself as someone who is talkative.", "I see myself as someone who is generally trusting.", "I see myself as someone who does a thorough job.", "I see myself as someone who worries a lot.", "I see myself as someone who has an active imagination."]}
+          />
         </div>
 
         <div ref={firstQuestionRef}>
@@ -277,8 +283,6 @@ export default function Component() {
               }
 
               await client.postQuestionByUserUserUidQuestionPost(uuid, data)
-              const question = await client.getQuestionByUserUserUidQuestionQidGet(uuid, 1)
-              setQuestion2(question.data);
             }}
           />
         </div>
@@ -295,8 +299,6 @@ export default function Component() {
               }
 
               await client.postQuestionByUserUserUidQuestionPost(uuid, data)
-              const question = await client.getQuestionByUserUserUidQuestionQidGet(uuid, 2)
-              setQuestion3(question.data)
             }}
           />
         </div>
@@ -336,9 +338,8 @@ export default function Component() {
           {sections.map((section, index) => (
             <div
               key={index}
-              className={`w-3 h-3 rounded-full ${
-                index === currentSection ? "bg-[#00ea51] h-8" : "bg-[#d6d6d6]"
-              }`}
+              className={`w-3 h-3 rounded-full ${index === currentSection ? "bg-[#00ea51] h-8" : "bg-[#d6d6d6]"
+                }`}
             ></div>
           ))}
         </div>
