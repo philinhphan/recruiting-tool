@@ -114,7 +114,7 @@ export default function Component() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section with Green Gradient */}
-      <div className="relative h-80 bg-gradient-to-br from-[#00ea51] to-emerald-400 overflow-hidden">
+      <div className="relative h-[20vh] bg-gradient-to-br from-[#00ea51] to-emerald-400 overflow-hidden">
         {/* Diagonal Line Pattern */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent transform -skew-y-12"></div>
