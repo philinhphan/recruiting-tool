@@ -10,6 +10,7 @@ import { Offerings, OpenPosition } from "./offerings"
 import { UserApi } from "./api-client"
 import { PersonalityTestSection } from "./personality-test-section"
 import { LoadingButton } from "./loading-button"
+import { TypeWriter } from "./typewriter"
 
 export default function Component() {
   const client = new UserApi();
@@ -138,13 +139,15 @@ export default function Component() {
 
             <div className="space-y-4 text-[#6e6e6e] text-lg leading-relaxed max-w-3xl mx-auto">
               <p>
-                Hello there! I'm Flash, your personal AI assistant here at Reply! I'm here to help you discover the best
-                job opportunities that match your skills and interests. With my help, applying for positions is simple and
-                straightforward.
+                <TypeWriter
+                  text="Hello there! I'm Flash, your personal AI assistant here at Reply! I'm here to help you discover the best job opportunities that match your skills and interests. With my help, applying for positions is simple and straightforward."
+                />
               </p>
               <p>
-                Let me guide you through the process and make your job search a breeze. Together, we'll find the perfect
-                role for you at Reply. Let's get started on this exciting journey!
+                <TypeWriter
+                  text="Let me guide you through the process and make your job search a breeze. Together, we'll find the perfect role for you at Reply. Let's get started on this exciting journey!"
+                  delay={2200}
+                />
               </p>
             </div>
           </div>
@@ -293,9 +296,9 @@ export default function Component() {
             onContinue={async (answer) => {
               await new Promise((resolve) => setTimeout(resolve, 3000))
               setOpenPositions([
-              {"title":"Werkstudent (m/w/d) QA & CI/CD für Robotiksysteme","location":"MÜNCHEN","description":"Unterstützung beim Aufbau und der Pflege unserer CI/CD-Pipelines für die Robotikplattform CASCADE. Mitwirkung bei der Entwicklung und Umsetzung automatisierter Teststrategien für unsere Robotersysteme. Monitoring und Analyse von Netzwerkverbindungen zwischen robotischen Komponenten"},
-              {"title":"Werkstudent (m/w/d) Generative AI - Google Cloud","location":"BERLIN, MÜNCHEN, DÜSSELDORF, GÜTERSLOH, HYBRID, KÖLN, HAMBURG","description": "Du wirst Teil eines dynamischen Teams und arbeitest aktiv an der Realisierung und Durchführung von Kundenprojekten im Bereich Generative AI auf der Google Cloud Platform. Unterstützung bei der technischen Konzeption und Implementierung von neuen Use-Cases und einbringen von deinen Ideen in verschiedenen Projekten. Du entwickelst und implementierst praktische Demos und PoCs für Kunden, um die Möglichkeiten der generativen KI aufzuzeigen und weiterzuentwickeln. Du beschäftigst dich mit neuen Funktionen und Ressourcen der Google Cloud Platform und evaluierst deren Einsatzmöglichkeiten im Kontext generativer KI. Analyse von Kundenanforderungen und Entwicklung von maßgeschneiderten Lösungen"}
-          ]);
+                { "title": "Werkstudent (m/w/d) QA & CI/CD für Robotiksysteme", "location": "MÜNCHEN", "description": "Unterstützung beim Aufbau und der Pflege unserer CI/CD-Pipelines für die Robotikplattform CASCADE. Mitwirkung bei der Entwicklung und Umsetzung automatisierter Teststrategien für unsere Robotersysteme. Monitoring und Analyse von Netzwerkverbindungen zwischen robotischen Komponenten" },
+                { "title": "Werkstudent (m/w/d) Generative AI - Google Cloud", "location": "BERLIN, MÜNCHEN, DÜSSELDORF, GÜTERSLOH, HYBRID, KÖLN, HAMBURG", "description": "Du wirst Teil eines dynamischen Teams und arbeitest aktiv an der Realisierung und Durchführung von Kundenprojekten im Bereich Generative AI auf der Google Cloud Platform. Unterstützung bei der technischen Konzeption und Implementierung von neuen Use-Cases und einbringen von deinen Ideen in verschiedenen Projekten. Du entwickelst und implementierst praktische Demos und PoCs für Kunden, um die Möglichkeiten der generativen KI aufzuzeigen und weiterzuentwickeln. Du beschäftigst dich mit neuen Funktionen und Ressourcen der Google Cloud Platform und evaluierst deren Einsatzmöglichkeiten im Kontext generativer KI. Analyse von Kundenanforderungen und Entwicklung von maßgeschneiderten Lösungen" }
+              ]);
             }}
           />
         </div>

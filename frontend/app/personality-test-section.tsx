@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { LoadingButton } from "./loading-button"
 import React, { RefObject } from "react"
+import { TypeWriter } from "./typewriter"
 
 export type OpenPosition = {
     title: string
@@ -47,7 +48,7 @@ export function PersonalityTestSection({ heading, description, questions, jumpTo
                 <h2 className="text-[#000000] text-3xl md:text-4xl font-bold mb-8">{heading}</h2>
 
                 <div className="space-y-4 text-[#6e6e6e] text-lg leading-relaxed max-w-3xl mx-auto mb-8">
-                    <p>{description}</p>
+                    <p><TypeWriter text={description}/></p>
                 </div>
 
                 {/* Personality Test Section */}

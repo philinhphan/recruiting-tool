@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import React from "react"
+import { TypeWriter } from "./typewriter"
 
 export type OpenPosition = {
     title: string
@@ -20,7 +21,7 @@ export function Offerings({ heading, openPositions }: OfferingsProps) {
                 <h2 className="text-[#000000] text-3xl md:text-4xl font-bold mb-8">{heading}</h2>
 
                 <div className="space-y-4 text-[#6e6e6e] text-lg leading-relaxed max-w-3xl mx-auto mb-8">
-                    <p>I've found the top three job positions at Reply that I think are a perfect match for your skills and interests. I'm excited to share these with you and hope you'll find them appealing! If these aren't quite what you're looking for, no worries at all—you can easily explore all the available positions to find the one that suits you best. Let's find your dream job together!</p>
+                    <p><TypeWriter text="I've found the top three job positions at Reply that I think are a perfect match for your skills and interests. I'm excited to share these with you and hope you'll find them appealing! If these aren't quite what you're looking for, no worries at all—you can easily explore all the available positions to find the one that suits you best. Let's find your dream job together!"/></p>
                     <p>Imagine the future, with us.</p>
                 </div>
 
